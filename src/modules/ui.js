@@ -6,8 +6,8 @@ export class UIManager {
     this.bloomModeCallback = null;
     this.modelSelectorCallback = null;
     
-    this.pulseEnabled = false;
-    this.currentModel = 'House15.glb';
+    this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
+    this.currentModel = '016.glb';
     this.glowMode = 'emissive';
   }
   
@@ -184,18 +184,26 @@ export class UIManager {
   setupCustomLightingControls(callback) {
     this.lightingCallback = callback;
     
-    // Слайдери освітлення
+    // Перевірка чи існує секція custom lighting (може бути прихована)
+    const customLightingSection = document.querySelector('.custom-lighting-section');
+    if (!customLightingSection) {
+      // Секція прихована - пропускаємо налаштування
+      console.log('ℹ️ Custom lighting controls приховані');
+      return;
+    }
+    
+    // Слайдери освітлення (тільки якщо секція не прихована)
     this.setupSlider('main-light-intensity', 'main-light-value', (value) => {
       callback({ mainIntensity: parseFloat(value) });
-    });
+    }, true); // silent mode
     
     this.setupSlider('inner-light-intensity', 'inner-light-value', (value) => {
       callback({ innerIntensity: parseFloat(value) });
-    });
+    }, true);
     
     this.setupSlider('bottom-light-intensity', 'bottom-light-value', (value) => {
       callback({ bottomIntensity: parseFloat(value) });
-    });
+    }, true);
     
     // Колір внутрішнього світла
     const colorPicker = document.getElementById('inner-light-color');
@@ -223,7 +231,7 @@ export class UIManager {
     }
   }
   
-  setupSlider(sliderId, valueId, callback) {
+  setupSlider(sliderId, valueId, callback, silent = false) {
     const slider = document.getElementById(sliderId);
     const valueDisplay = document.getElementById(valueId);
     
@@ -236,7 +244,8 @@ export class UIManager {
       
       // Ініціалізація початкового значення
       valueDisplay.textContent = slider.value;
-    } else {
+    } else if (!silent) {
+      // Показуємо попередження тільки якщо не в silent режимі
       console.warn(`Не знайдено елементи для слайдера: ${sliderId}`);
     }
   }

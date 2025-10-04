@@ -1,7 +1,7 @@
 * {
   margin: 0;
   padding: 0;
-  box-siz.model-grid {box;
+  box-sizing: border-box;
 }
 
 body {
@@ -34,7 +34,8 @@ body {
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-width: 200px;
+  min-width: 280px;
+  max-height: calc(100vh - 40px);
   z-index: 100;
 }
 
@@ -60,7 +61,30 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  max-width: 250px;
+  max-width: 280px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+/* Scrollbar for model grid */
+.model-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.model-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.model-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.model-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .model-card {
@@ -144,8 +168,8 @@ body {
 }
 
 .control-section input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
   appearance: none;
+  -webkit-appearance: none;
   width: 16px;
   height: 16px;
   background: linear-gradient(45deg, #4f9eff, #667eea);
@@ -351,6 +375,36 @@ body {
   transform: translateY(-1px);
 }
 
+.export-btn {
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 8px;
+  border: 2px solid rgba(76, 175, 80, 0.5);
+  border-radius: 8px;
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.export-btn:hover {
+  background: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
 .file-info {
   margin-top: 8px;
   padding: 8px 12px;
@@ -417,6 +471,7 @@ body {
     left: 10px;
     right: 10px;
     width: auto;
+    max-height: calc(100vh - 330px);
   }
   
   .controls-panel {
@@ -429,6 +484,7 @@ body {
   }
   
   .model-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    max-height: calc(100vh - 380px);
   }
 }

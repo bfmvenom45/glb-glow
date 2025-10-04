@@ -18,7 +18,8 @@ export class SceneManager {
     // Створення камери
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
     this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
-    this.camera.position.set(-5, -1, -8);
+    this.camera.position.set(0, 2, 10); // Камера дивиться на центр з відстані
+    this.camera.lookAt(0, 0, 0); // Дивимося на центр сцени
     
     // Створення рендерера
     this.renderer = new THREE.WebGLRenderer({ 
@@ -32,11 +33,13 @@ export class SceneManager {
     
     // Створення контролів
     this.controls = new OrbitControls(this.camera, this.canvas);
+    this.controls.target.set(0, 0, 0); // Центр обертання - центр сцени
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 1;
-    this.controls.maxDistance = 10;
+    this.controls.minDistance = 3;
+    this.controls.maxDistance = 20;
+    this.controls.update(); // Застосувати зміни target
     
     // Освітлення
     this.setupLighting();

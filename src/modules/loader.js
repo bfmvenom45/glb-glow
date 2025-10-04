@@ -85,6 +85,15 @@ export class ModelLoader {
             console.warn(`Модель ${modelPath} порожня або не містить геометрії`);
           }
           
+          // 🎬 Зберігаємо анімації з оригінального GLTF
+          if (gltf.animations && gltf.animations.length > 0) {
+            model.animations = gltf.animations;
+            console.log(`🎬 Знайдено анімацій: ${gltf.animations.length}`);
+            gltf.animations.forEach((clip, i) => {
+              console.log(`  - Анімація ${i + 1}: "${clip.name}" (${clip.duration.toFixed(2)}s, ${clip.tracks.length} tracks)`);
+            });
+          }
+          
           // Оптимізація моделі
           this.optimizeModel(model);
           
@@ -258,21 +267,22 @@ export class ModelLoader {
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     
-    // Центрування моделі
+    // Центрування моделі - зсув по центру
     model.position.x = -center.x;
     model.position.y = -center.y;
     model.position.z = -center.z;
     
     // Масштабування для стандартного розміру
     const maxDimension = Math.max(size.x, size.y, size.z);
-    const targetSize = 3; // Цільовий розмір
+    const targetSize = 5; // Цільовий розмір
     
     if (maxDimension > 0) {
       const scale = targetSize / maxDimension;
       model.scale.setScalar(scale);
     }
     
-    console.log(`Модель центрована та масштабована. Розмір: ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)}`);
+    console.log(`✅ Модель центрована по (0, 0, 0). Розмір: ${size.x.toFixed(2)} x ${size.y.toFixed(2)} x ${size.z.toFixed(2)}`);
+    console.log(`📏 Масштаб: ${model.scale.x.toFixed(2)}, Позиція: (${model.position.x.toFixed(2)}, ${model.position.y.toFixed(2)}, ${model.position.z.toFixed(2)})`);
   }
   
   preloadModels(modelPaths) {
@@ -348,6 +358,15 @@ export class ModelLoader {
           
           if (!model || !model.children || model.children.length === 0) {
             console.warn(`Модель ${file.name} порожня або не містить геометрії`);
+          }
+          
+          // 🎬 Зберігаємо анімації з завантаженого файлу
+          if (gltf.animations && gltf.animations.length > 0) {
+            model.animations = gltf.animations;
+            console.log(`🎬 Знайдено анімацій у файлі: ${gltf.animations.length}`);
+            gltf.animations.forEach((clip, i) => {
+              console.log(`  - Анімація ${i + 1}: "${clip.name}" (${clip.duration.toFixed(2)}s, ${clip.tracks.length} tracks)`);
+            });
           }
           
           // Оптимізація моделі

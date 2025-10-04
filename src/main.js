@@ -16,7 +16,7 @@ class App {
     this.uiManager = new UIManager();
     
     this.currentModel = null;
-    this.currentModelName = 'House15.glb';
+    this.currentModelName = '016.glb';
     
     this.init();
   }
@@ -258,7 +258,254 @@ class App {
     // Рендеринг
     this.bloomManager.render();
   }
+  
+  disposeModel(model) {
+    // Helper функція для очищення моделі та її ресурсів
+    if (!model) return;
+    
+    model.traverse((node) => {
+      if (node.geometry) {
+        node.geometry.dispose();
+      }
+      
+      if (node.material) {
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          if (material.map) material.map.dispose();
+          if (material.lightMap) material.lightMap.dispose();
+          if (material.bumpMap) material.bumpMap.dispose();
+          if (material.normalMap) material.normalMap.dispose();
+          if (material.specularMap) material.specularMap.dispose();
+          if (material.envMap) material.envMap.dispose();
+          material.dispose();
+        });
+      }
+    });
+  }
+  
+  async exportModelWithEffects() {
+    if (!this.currentModel) {
+      this.uiManager.showNotification('❌ Немає моделі для експорту', 'error');
+      return;
+    }
+    
+    try {
+      console.log('🚀 УЛЬТРА-ПРОСТИЙ GLB ЕКСПОРТ (тільки GLB!)...');
+      
+      // Динамічний імпорт THREE та GLTFExporter
+      const THREE = await import('three');
+      const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js');
+      const simpleExporter = new GLTFExporter();
+      
+      console.log('🔧 Створення УЛЬТРА-ПРОСТОЇ моделі...');
+      
+      // Створюємо модель ТІЛЬКИ з MeshBasicMaterial (без PBR)
+      const ultraCleanModel = new THREE.Group();
+      ultraCleanModel.name = 'SimpleModel';
+      
+      let meshCount = 0;
+      this.currentModel.traverse((node) => {
+        if (node.isMesh && node.geometry) {
+          const basicMesh = new THREE.Mesh();
+          basicMesh.geometry = node.geometry.clone();
+          
+          // БЕЗПЕЧНИЙ матеріал з emissive, але БЕЗ volume властивостей
+          const originalMat = node.material;
+          const originalColor = originalMat && originalMat.color ? 
+            originalMat.color.clone() : new THREE.Color(0x888888);
+          
+          // Перевіряємо чи є emissive властивості
+          const hasEmissive = originalMat && (
+            (originalMat.emissive && originalMat.emissive.r + originalMat.emissive.g + originalMat.emissive.b > 0) ||
+            originalMat.emissiveIntensity > 0
+          );
+          
+          if (hasEmissive) {
+            console.log(`  ✨ Зберігаємо emissive для ${node.name}: ${originalMat.emissive.getHexString()}`);
+            
+            // MeshStandardMaterial з emissive, але БЕЗ volume
+            basicMesh.material = new THREE.MeshStandardMaterial({
+              name: `EmissiveMaterial_${meshCount}`,
+              color: originalColor,
+              emissive: originalMat.emissive.clone(),
+              emissiveIntensity: originalMat.emissiveIntensity || 1,
+              metalness: 0,  // Мінімальний metalness
+              roughness: 1,  // Максимальний roughness для простоти
+              transparent: originalMat.transparent || false,
+              opacity: originalMat.opacity !== undefined ? originalMat.opacity : 1,
+              side: THREE.FrontSide
+              // КРИТИЧНО: НЕ додаємо transmission, attenuationDistance, thickness!
+            });
+          } else {
+            // Звичайний MeshBasicMaterial для не-emissive об'єктів
+            basicMesh.material = new THREE.MeshBasicMaterial({
+              name: `BasicMaterial_${meshCount}`,
+              color: originalColor,
+              transparent: originalMat ? originalMat.transparent : false,
+              opacity: originalMat ? (originalMat.opacity !== undefined ? originalMat.opacity : 1) : 1,
+              side: THREE.FrontSide
+            });
+          }
+          
+          basicMesh.name = `Mesh_${meshCount++}`;
+          basicMesh.position.copy(node.position);
+          basicMesh.rotation.copy(node.rotation);
+          basicMesh.scale.copy(node.scale);
+          
+          ultraCleanModel.add(basicMesh);
+        }
+      });
+      
+      console.log(`✅ Створено ультра-просту модель з ${meshCount} мешів`);
+      
+      // 🎬 Створення emissive анімації для GLB
+      console.log('🎬 Створення emissive пульсації для експорту...');
+      
+      const animations = [];
+      const emissiveMeshes = [];
+      
+      ultraCleanModel.traverse((child) => {
+        if (child.material && child.material.emissiveIntensity > 0) {
+          emissiveMeshes.push(child);
+          console.log(`  ✨ Знайдено emissive меш: ${child.name}`);
+        }
+      });
+      
+      if (emissiveMeshes.length > 0) {
+        // Створення keyframe animation для emissiveIntensity
+        const times = [0, 1, 2];  // 2 секунди циклу
+        const values = [1.0, 2.0, 1.0];  // від 1x до 2x інтенсивності
+        
+        // Спробуємо SCALE анімацію замість emissive (більш сумісна з glTF)
+        const scaleAnimation = () => {
+          const scaleValues = [];
+          const numFrames = 60; // 60 кадрів для плавності
+          
+          for (let i = 0; i <= numFrames; i++) {
+            const t = (i / numFrames) * Math.PI * 2; // Повний цикл
+            const scale = 1.0 + Math.sin(t) * 0.1; // Пульсація 0.9 - 1.1
+            scaleValues.push(scale, scale, scale); // x, y, z
+          }
+          
+          const scaleTimes = [];
+          for (let i = 0; i <= numFrames; i++) {
+            scaleTimes.push((i / numFrames) * 2); // 2 секунди
+          }
+          
+          return { times: scaleTimes, values: scaleValues };
+        };
+        
+        const scaleData = scaleAnimation();
+        
+        emissiveMeshes.forEach((mesh, index) => {
+          // Використовуємо scale анімацію (більш сумісна з glTF)
+          const trackName = `${mesh.name}.scale`;
+          
+          const track = new THREE.VectorKeyframeTrack(
+            trackName,
+            scaleData.times,
+            scaleData.values
+          );
+          
+          const clip = new THREE.AnimationClip(`PulseAnimation_${index}`, 2, [track]);
+          animations.push(clip);
+          console.log(`  🎵 Створено SCALE анімацію: ${trackName}`);
+        });
+        
+        // Додаємо анімації до моделі
+        ultraCleanModel.animations = animations;
+        console.log(`✅ Додано ${animations.length} emissive анімацій`);
+        
+        // Додаткова перевірка
+        console.log('🔍 Перевірка animations array:');
+        ultraCleanModel.animations.forEach((anim, i) => {
+          console.log(`  ${i}: "${anim.name}" (${anim.duration}s, ${anim.tracks.length} tracks)`);
+          anim.tracks.forEach((track, j) => {
+            console.log(`    Track ${j}: ${track.name} (${track.times.length} keyframes)`);
+          });
+        });
+      } else {
+        console.log('ℹ️ Emissive мешів не знайдено');
+      }
+      
+      console.log('🧹 Перевірка матеріалів перед експортом...');
+      
+      // Додаткова перевірка матеріалів
+      ultraCleanModel.traverse((child) => {
+        if (child.material) {
+          const matType = child.material.constructor.name;
+          const hasEmissive = child.material.emissiveIntensity > 0 ? ' ✨' : '';
+          console.log(`  📋 ${child.name}: ${matType}${hasEmissive}`);
+        }
+      });
+      
+      // Експорт з УЛЬТРА-мінімальними опціями 
+      const simpleOptions = {
+        binary: true,
+        embedImages: false,
+        includeCustomExtensions: false,
+        onlyVisible: true,
+        // МАКСИМАЛЬНЕ блокування extensions
+        extensionsUsed: [],
+        extensionsRequired: [],
+        // Базові налаштування з анімаціями
+        animations: ultraCleanModel.animations,  // Передаємо анімації явно
+        morphTargets: false,
+        // Відключаємо усі можливі проблемні extensions  
+        truncateDrawRange: true,
+        // Забираємо materials: 'basic' щоб зберегти MeshStandardMaterial
+      };
+      
+      simpleExporter.parse(
+        ultraCleanModel,
+        (result) => {
+          console.log('📦 Успішний простий GLB експорт!');
+          
+          const blob = new Blob([result], { type: 'application/octet-stream' });
+          const link = document.createElement('a');
+          const fileName = `${this.currentModelName.replace(/\.[^/.]+$/, '')}_simple.glb`;
+          
+          link.href = URL.createObjectURL(blob);
+          link.download = fileName;
+          link.click();
+          
+          setTimeout(() => URL.revokeObjectURL(link.href), 100);
+          
+          console.log(`✅ Простий GLB експортовано: ${fileName}`);
+          console.log(`📊 Розмір файлу: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+          this.uiManager.showNotification(`✅ Простий експорт: ${fileName}`, 'success');
+          
+          // Очищення тимчасової моделі
+          console.log('🧹 Очищення тимчасової моделі...');
+          ultraCleanModel.traverse((child) => {
+            if (child.material) child.material.dispose();
+            if (child.geometry) child.geometry.dispose();
+          });
+        },
+        (error) => {
+          console.error('❌ Навіть простий GLB експорт не вдався:', error);
+          console.error('📋 Деталі помилки:', error.message, error.stack);
+          this.uiManager.showNotification('❌ GLB експорт не вдався', 'error');
+          
+          // Очищення тимчасової моделі при помилці
+          console.log('🧹 Очищення тимчасової моделі (помилка)...');
+          ultraCleanModel.traverse((child) => {
+            if (child.material) child.material.dispose();
+            if (child.geometry) child.geometry.dispose();
+          });
+        },
+        simpleOptions
+      );
+      
+    } catch (error) {
+      console.error('❌ Помилка під час експорту:', error);
+      this.uiManager.showNotification('❌ Не вдалося експортувати модель', 'error');
+    }
+  }
 }
 
 // Запуск програми
-new App();
+const app = new App();
+
+// Зробити app доступним глобально для UI
+window.app = app;

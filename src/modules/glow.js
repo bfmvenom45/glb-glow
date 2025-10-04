@@ -4,13 +4,13 @@ export class GlowManager {
   constructor() {
     this.glowMeshes = [];
     this.originalMaterials = new Map(); // Зберігаємо оригінальні матеріали
-    this.pulseEnabled = false;
-    this.pulseSpeed = 3.0;
-    this.pulseIntensity = 1.0;
+    this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
+    this.pulseSpeed = 3.0;  // Відновлено швидку анімацію
+    this.pulseIntensity = 1.0;  // Відновлено сильну пульсацію
     this.glowMode = 'emissive'; // 'separate' або 'emissive'
     
     this.params = {
-      intensity: 2.9,
+      intensity: 2.0,  // Яскраве свічення
       hue: 0.06
     };
     
@@ -182,9 +182,13 @@ export class GlowManager {
       // Оновлення emissive властивостей
       this.glowMeshes.forEach(mesh => {
         if (mesh.material && mesh.material.emissive) {
-          const glowColor = new THREE.Color().setHSL(this.params.hue, 1, 0.3 + intensity * 0.1);
+          // 🎨 НАЛАШТУВАННЯ ПУЛЬСАЦІЇ:
+          // Базова яскравість: 0.3 (0.0-1.0) - чим більше, тим яскравіше завжди
+          // Амплітуда пульсації: intensity * 0.2 - чим більше множник, тим сильніша пульсація
+          const glowColor = new THREE.Color().setHSL(this.params.hue, 1, 0.3 + intensity * 0.2);
           mesh.material.emissive.copy(glowColor);
-          mesh.material.emissiveIntensity = intensity * 0.15;
+          // Інтенсивність світіння: intensity * 0.3 - збільшено для яскравішого світла
+          mesh.material.emissiveIntensity = intensity * 0.3;
         }
       });
     } else {
