@@ -15,8 +15,8 @@ class App {
     this.modelLoader = new ModelLoader();
     this.uiManager = new UIManager();
     
-    this.currentModel = null;
-    this.currentModelName = '016.glb';
+  this.currentModel = null;
+  this.currentModelName = 'class-out_emision-in .glb';
     
     this.init();
   }

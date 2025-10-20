@@ -6,8 +6,8 @@ export class UIManager {
     this.bloomModeCallback = null;
     this.modelSelectorCallback = null;
     
-    this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
-    this.currentModel = '016.glb';
+  this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
+  this.currentModel = 'class-out_emision-in .glb';
     this.glowMode = 'emissive';
   }
   
