@@ -9,7 +9,7 @@ export class ModelLoader {
     this.loadTimeout = 30000; // 30 секунд timeout
     this.dracoEnabled = true; // Флаг для контролю DRACO
     
-    // Налаштування DRACOLoader для стиснених моделей
+  // Configure DRACOLoader for compressed models
     this.setupDracoLoader();
   }
   
@@ -50,7 +50,7 @@ export class ModelLoader {
       });
       
     } catch (error) {
-      console.error('❌ Помилка налаштування DRACOLoader:', error);
+  console.error('❌ DRACOLoader setup error:', error);
       console.warn('⚠️ Деякі стиснені моделі можуть не завантажуватися');
       
       // Fallback: вимикаємо DRACO
@@ -68,12 +68,12 @@ export class ModelLoader {
         return;
       }
       
-      console.log(`Завантаження моделі: ${modelPath}`);
+  console.log(`Loading model: ${modelPath}`);
       
-      // Timeout для завантаження
+  // Timeout for loading
       const timeoutId = setTimeout(() => {
-        console.error(`Timeout завантаження моделі ${modelPath}`);
-        reject(new Error(`Timeout завантаження ${modelPath}`));
+  console.error(`Timeout loading model ${modelPath}`);
+  reject(new Error(`Timeout loading ${modelPath}`));
       }, this.loadTimeout);
       
       this.loader.load(
@@ -100,14 +100,14 @@ export class ModelLoader {
           // Збереження в кеш
           this.loadedModels.set(modelPath, model.clone());
           
-          console.log(`Модель ${modelPath} успішно завантажена (${model.children.length} об'єктів)`);
+          console.log(`Model ${modelPath} successfully loaded (${model.children.length} objects)`);
           clearTimeout(timeoutId);
           resolve(model);
         },
         (progress) => {
           if (progress.total > 0) {
             const percent = (progress.loaded / progress.total * 100).toFixed(0);
-            console.log(`Завантаження ${modelPath}: ${percent}% (${progress.loaded}/${progress.total} bytes)`);
+            console.log(`Loading ${modelPath}: ${percent}% (${progress.loaded}/${progress.total} bytes)`);
           }
         },
         (error) => {
@@ -115,14 +115,14 @@ export class ModelLoader {
           
           // Детальна діагностика помилок
           if (error.message && (error.message.includes('DRACO') || error.message.includes('Failed to fetch'))) {
-            console.error(`❌ DRACO/CDN помилка для ${modelPath}:`, error.message);
-            console.log('� Спроба завантажити без DRACO підтримки...');
+            console.error(`❌ DRACO/CDN error for ${modelPath}:`, error.message);
+            console.log('� Trying to load without DRACO support...');
             
-            // Спробуємо завантажити без DRACO
+            // Try loading without DRACO
             this.loadWithoutDraco(modelPath).then(resolve).catch(() => {
               // Якщо і це не спрацювало, спробуємо fallback
               if (modelPath !== 'House.glb') {
-                console.log('🔄 Спроба завантажити fallback модель House.glb');
+                console.log('🔄 Attempting to load fallback model House.glb');
                 this.load('House.glb').then(resolve).catch(reject);
               } else {
                 reject(error);
@@ -130,12 +130,12 @@ export class ModelLoader {
             });
             return;
           } else {
-            console.error(`❌ Помилка завантаження ${modelPath}:`, error);
+            console.error(`❌ Error loading ${modelPath}:`, error);
           }
           
-          // Спробуємо завантажити fallback модель
+          // Try to load fallback model
           if (modelPath !== 'House.glb') {
-            console.log('🔄 Спроба завантажити fallback модель House.glb');
+            console.log('🔄 Attempting to load fallback model House.glb');
             this.load('House.glb').then(resolve).catch(reject);
           } else {
             reject(error);
@@ -147,7 +147,7 @@ export class ModelLoader {
   
   async loadWithoutDraco(modelPath) {
     return new Promise((resolve, reject) => {
-      console.log(`🔧 Завантаження ${modelPath} без DRACO підтримки...`);
+  console.log(`🔧 Loading ${modelPath} without DRACO support...`);
       
       // Створюємо новий loader без DRACO
       const simpleLoader = new GLTFLoader();
@@ -173,11 +173,11 @@ export class ModelLoader {
         (progress) => {
           if (progress.total > 0) {
             const percent = (progress.loaded / progress.total * 100).toFixed(0);
-            console.log(`📦 Завантаження без DRACO ${modelPath}: ${percent}%`);
+      console.log(`📦 Loading without DRACO ${modelPath}: ${percent}%`);
           }
         },
         (error) => {
-          console.error(`❌ Не вдалося завантажити ${modelPath} навіть без DRACO:`, error);
+          console.error(`❌ Failed to load ${modelPath} even without DRACO:`, error);
           reject(error);
         }
       );
@@ -207,7 +207,7 @@ export class ModelLoader {
       }
     });
     
-    // Видаляємо існуюче світло з моделі
+  // Remove existing lights from the model
     this.removeExistingLights(model);
     
     // Центрування моделі
@@ -226,7 +226,7 @@ export class ModelLoader {
           child.isAmbientLight ||
           child.isHemisphereLight) {
         
-        console.log(`🗑️ Видаляємо світло: ${child.name || child.type}`);
+  console.log(`🗑️ Removing light: ${child.name || child.type}`);
         lightsToRemove.push(child);
       }
       
@@ -236,7 +236,7 @@ export class ModelLoader {
           child.name.toLowerCase().includes('lamp') ||
           child.name.toLowerCase().includes('bulb')
       )) {
-        console.log(`🗑️ Видаляємо світловий об'єкт: ${child.name}`);
+  console.log(`🗑️ Removing light object: ${child.name}`);
         lightsToRemove.push(child);
       }
     });
@@ -248,11 +248,11 @@ export class ModelLoader {
       }
     });
     
-    console.log(`✅ Видалено ${lightsToRemove.length} світлових об'єктів`);
+  console.log(`✅ Removed ${lightsToRemove.length} light objects`);
   }
   
   optimizeMaterial(material) {
-    // Налаштування для кращої продуктивності
+  // Settings for better performance
     material.side = material.side || THREE.FrontSide;
     
     // Додавання емісивних властивостей для bloom ефекту
@@ -286,10 +286,10 @@ export class ModelLoader {
   }
   
   preloadModels(modelPaths) {
-    // Попереднє завантаження моделей
+  // Preload models
     const loadPromises = modelPaths.map(path => 
       this.load(path).catch(error => {
-        console.warn(`Не вдалося попередньо завантажити ${path}:`, error);
+  console.warn(`Failed to preload ${path}:`, error);
         return null;
       })
     );
@@ -322,7 +322,7 @@ export class ModelLoader {
     return Array.from(this.loadedModels.keys());
   }
   
-  // 📁 Завантаження файлів з локальної файлової системи
+  // 📁 Loading files from local filesystem
   async loadFromFile(file) {
     return new Promise((resolve, reject) => {
       if (!file) {
@@ -336,7 +336,7 @@ export class ModelLoader {
       const isValidType = validTypes.some(type => fileName.endsWith(type));
       
       if (!isValidType) {
-        reject(new Error('Підтримуються тільки .glb та .gltf файли'));
+  reject(new Error('Only .glb and .gltf files are supported'));
         return;
       }
       

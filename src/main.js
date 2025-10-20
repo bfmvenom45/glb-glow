@@ -16,7 +16,7 @@ class App {
     this.uiManager = new UIManager();
     
   this.currentModel = null;
-  this.currentModelName = 'class-out_emision-in .glb';
+  this.currentModelName = 'class-out_emision-inside 14.glb';
     
     this.init();
   }
@@ -26,17 +26,40 @@ class App {
     this.sceneManager.init();
     this.bloomManager.init();
     
-    // Завантаження початкової моделі
+  // Loading initial model
     await this.loadModel(this.currentModelName);
     
-    // Налаштування UI
+  // Setup UI
     this.setupUI();
+    // Try to load persisted settings (if any)
+    try {
+      this.uiManager.loadSettings();
+    } catch (e) {
+      console.warn('No saved settings or failed to load', e);
+    }
     
     // Запуск анімації
     this.animate();
     
     // Обробники подій
     this.setupEventListeners();
+
+    // Hook up Save / Reset buttons
+    const saveBtn = document.getElementById('save-settings');
+    const resetBtn = document.getElementById('reset-settings');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        this.uiManager.saveSettings();
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        // Confirm before reset
+        if (confirm('Reset settings to defaults?')) {
+          this.uiManager.resetSettings();
+        }
+      });
+    }
     
     // Drag & Drop функціональність
     this.setupDragAndDrop();
@@ -45,7 +68,7 @@ class App {
   async loadModel(modelPath) {
     try {
       this.showLoading();
-      this.uiManager.showNotification(`Завантаження моделі ${modelPath}...`, 'info');
+  this.uiManager.showNotification(`Loading model ${modelPath}...`, 'info');
       
       // Видалення попередньої моделі
       if (this.currentModel) {
@@ -53,7 +76,7 @@ class App {
         this.glowManager.clearGlowMeshes();
       }
       
-      // Завантаження нової моделі
+  // Loading a new model
       const model = await this.modelLoader.load(modelPath);
       this.currentModel = model;
       
@@ -61,16 +84,16 @@ class App {
       this.applyAllEffects(model, modelPath);
       
     } catch (error) {
-      console.error('Помилка завантаження моделі:', error);
+  console.error('Error loading model:', error);
       this.hideLoading();
-      this.uiManager.showNotification(`Помилка завантаження ${modelPath}: ${error.message}`, 'error');
+  this.uiManager.showNotification(`Error loading ${modelPath}: ${error.message}`, 'error');
     }
   }
   
   async loadModelFromFile(file) {
     try {
       this.showLoading();
-      this.uiManager.showNotification(`Завантаження файлу ${file.name}...`, 'info');
+  this.uiManager.showNotification(`Loading file ${file.name}...`, 'info');
       
       // Видалення попередньої моделі
       if (this.currentModel) {
@@ -78,7 +101,7 @@ class App {
         this.glowManager.clearGlowMeshes();
       }
       
-      // Завантаження моделі з файлу
+  // Load model from file
       const model = await this.modelLoader.loadFromFile(file);
       this.currentModel = model;
       
@@ -86,9 +109,9 @@ class App {
       this.applyAllEffects(model, file.name);
       
     } catch (error) {
-      console.error('Помилка завантаження файлу:', error);
+  console.error('Error loading file:', error);
       this.hideLoading();
-      this.uiManager.showNotification(`Помилка завантаження ${file.name}: ${error.message}`, 'error');
+  this.uiManager.showNotification(`Error loading ${file.name}: ${error.message}`, 'error');
     }
   }
   
@@ -100,45 +123,45 @@ class App {
       // Додавання власного освітлення
       this.sceneManager.addCustomLighting(model);
       
-      // Додавання glow ефекту з налаштуваннями за замовчуванням
+  // Add glow effect with default settings
       this.glowManager.addInnerGlow(model);
       
       // Оновлення bloom шарів
       this.bloomManager.setupModelLayers(model);
       
       this.hideLoading();
-      this.uiManager.showNotification(`${modelName} успішно завантажено та налаштовано!`, 'success');
-      console.log(`Модель ${modelName} успішно завантажена та налаштована`);
+  this.uiManager.showNotification(`${modelName} successfully loaded and configured!`, 'success');
+  console.log(`Model ${modelName} successfully loaded and configured`);
       
     } catch (error) {
-      console.error('Помилка застосування ефектів:', error);
+  console.error('Error applying effects:', error);
       this.hideLoading();
-      this.uiManager.showNotification(`Помилка застосування ефектів до ${modelName}`, 'error');
+  this.uiManager.showNotification(`Error applying effects to ${modelName}`, 'error');
     }
   }
   
   setupUI() {
-    // Налаштування контролів bloom
+  // Setup bloom controls
     this.uiManager.setupBloomControls((params) => {
       this.bloomManager.updateParams(params);
     });
     
-    // Налаштування контролів glow
+  // Setup glow controls
     this.uiManager.setupGlowControls((params) => {
       this.glowManager.updateParams(params);
     });
     
-    // Налаштування пульсації
+  // Setup pulse controls
     this.uiManager.setupPulseControl((enabled) => {
       this.glowManager.setPulseEnabled(enabled);
     });
     
-    // Налаштування вибору bloom режиму
+  // Setup bloom mode selection
     this.uiManager.setupBloomModeControl((mode) => {
       this.bloomManager.setMode(mode);
     });
     
-    // Налаштування вибору glow режиму
+  // Setup glow mode selection
     this.uiManager.setupGlowModeControl((mode) => {
       this.glowManager.setGlowMode(mode);
       // Перезастосовуємо glow з новим режимом
@@ -147,7 +170,7 @@ class App {
       }
     });
     
-    // Налаштування вибору моделі
+  // Setup model selection
     this.uiManager.setupModelSelector(
       (modelPath) => {
         this.currentModelName = modelPath;
@@ -158,20 +181,41 @@ class App {
       }
     );
     
-    // Налаштування свічення об'єктів
+  // Setup object glow settings
     this.uiManager.setupGlowSettings((settings) => {
       this.glowManager.updateGlowSettings(settings);
-      // Перезастосовуємо glow з новими налаштуваннями
+  // Reapply glow with new settings
       if (this.currentModel) {
         this.glowManager.addInnerGlow(this.currentModel);
-        this.uiManager.showNotification('Налаштування світіння оновлено!', 'success');
+  this.uiManager.showNotification('Glow settings updated!', 'success');
       }
     });
     
-    // Налаштування власного освітлення
+  // Setup custom lighting
     this.uiManager.setupCustomLightingControls((params) => {
       this.sceneManager.updateCustomLighting(params);
     });
+
+    // Кнопка вкл/викл базового освітлення сцени
+    this.uiManager.setupSceneLightToggle((enabled) => {
+      this.sceneManager.toggleSceneLights(enabled);
+    });
+
+    // Info button (modal)
+    this.uiManager.setupInfoButton();
+
+    // Ініціалізація кнопки відповідно до поточного стану
+    const sceneLightBtn = document.getElementById('scene-light-toggle');
+    if (sceneLightBtn) {
+      const isOn = this.sceneManager.isSceneLightsEnabled();
+      if (isOn) {
+        sceneLightBtn.classList.add('active');
+  sceneLightBtn.textContent = '🔆 Disable Light';
+      } else {
+        sceneLightBtn.classList.remove('active');
+  sceneLightBtn.textContent = '🔆 Enable Light';
+      }
+    }
   }
   
   setupEventListeners() {
@@ -219,7 +263,7 @@ class App {
         if (file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')) {
           this.uiManager.handleFileUpload(file);
         } else {
-          this.uiManager.showNotification('Підтримуються тільки .glb та .gltf файли', 'error');
+          this.uiManager.showNotification('Only .glb and .gltf files are supported', 'error');
         }
       }
     });
@@ -359,7 +403,7 @@ class App {
       console.log(`✅ Створено ультра-просту модель з ${meshCount} мешів`);
       
       // 🎬 Створення emissive анімації для GLB
-      console.log('🎬 Створення emissive пульсації для експорту...');
+  console.log('🎬 Creating emissive pulse animation for export...');
       
       const animations = [];
       const emissiveMeshes = [];
@@ -383,7 +427,7 @@ class App {
           
           for (let i = 0; i <= numFrames; i++) {
             const t = (i / numFrames) * Math.PI * 2; // Повний цикл
-            const scale = 1.0 + Math.sin(t) * 0.1; // Пульсація 0.9 - 1.1
+            const scale = 1.0 + Math.sin(t) * 0.1; // Pulse 0.9 - 1.1
             scaleValues.push(scale, scale, scale); // x, y, z
           }
           
@@ -448,7 +492,7 @@ class App {
         // МАКСИМАЛЬНЕ блокування extensions
         extensionsUsed: [],
         extensionsRequired: [],
-        // Базові налаштування з анімаціями
+  // Base animation settings
         animations: ultraCleanModel.animations,  // Передаємо анімації явно
         morphTargets: false,
         // Відключаємо усі можливі проблемні extensions  
@@ -488,7 +532,7 @@ class App {
           this.uiManager.showNotification('❌ GLB експорт не вдався', 'error');
           
           // Очищення тимчасової моделі при помилці
-          console.log('🧹 Очищення тимчасової моделі (помилка)...');
+          console.log('🧹 Cleaning temporary model (error)...');
           ultraCleanModel.traverse((child) => {
             if (child.material) child.material.dispose();
             if (child.geometry) child.geometry.dispose();
@@ -498,8 +542,8 @@ class App {
       );
       
     } catch (error) {
-      console.error('❌ Помилка під час експорту:', error);
-      this.uiManager.showNotification('❌ Не вдалося експортувати модель', 'error');
+  console.error('❌ Export error:', error);
+  this.uiManager.showNotification('❌ Failed to export model', 'error');
     }
   }
 }

@@ -8,12 +8,12 @@
 - `emissiveIntensity` інтенсивність
 - Поточні налаштування Glow
 
-### 🎬 Автоматичне Створення Анімації Пульсації
-Якщо **пульсація увімкнена** (`💫 Увімкнути пульсацію`), система автоматично створює GLB анімацію:
-- **Назва анімації**: `EmissivePulse`
-- **Тривалість**: 2 секунди (циклічна)
-- **FPS**: 30 кадрів/секунду
-- **Тип**: Синусоїдальна хвиля (плавна пульсація)
+### 🎬 Automatic Emissive Pulse Animation Creation
+If **pulse is enabled** (`💫 Enable Pulse`), the system will automatically generate a GLB animation:
+- **Animation name**: `EmissivePulse`
+- **Duration**: 2 seconds (looped)
+- **FPS**: 30 frames/sec
+- **Type**: Sinusoidal wave (smooth pulse)
 
 ## 🚀 Як використовувати
 
@@ -26,11 +26,11 @@
    - Bloom режим (Simple/Selective)
 ```
 
-### 2. Увімкніть пульсацію (опціонально)
+### 2. Enable Pulse (optional)
 ```
-Натисніть "💫 Увімкнути пульсацію"
-→ Світло почне плавно пульсувати
-→ При експорті створюється keyframe анімація
+Press "💫 Enable Pulse"
+→ The light will start pulsing smoothly
+→ A keyframe animation will be generated on export
 ```
 
 ### 3. Експортуйте модель
@@ -59,22 +59,22 @@
 
 ## 🔍 Перевірка експорту
 
-### Консоль браузера показує:
+### Console output example:
 ```
-💾 Початок експорту моделі з emission ефектами...
-💡 Glow режим: emissive, Intensity: 2.9, Hue: 0.06
-🌊 Пульсація увімкнена (speed: 2)
-💡 Збереження emissive: "Material_Name" (intensity: 0.29)
-✅ Збережено emissive для 5 матеріалів
-🎬 Створення анімації пульсації світла...
-✅ Створено анімацію пульсації з 5 треками (60 кадрів)
-🎬 Всього анімацій для експорту: 1
-✅ Модель експортована: 016_with_effects.glb
-📊 Розмір файлу: 2.45 MB
-🎬 Анімацій експортовано: 1
-  1. "EmissivePulse" (2.00s, 5 треків)
-💡 Emissive збережено для 5 матеріалів
-🌊 Пульсація збережена як анімація "EmissivePulse"
+💾 Started exporting model with emission effects...
+💡 Glow mode: emissive, Intensity: 2.9, Hue: 0.06
+🌊 Pulse enabled (speed: 2)
+💡 Saving emissive: "Material_Name" (intensity: 0.29)
+✅ Saved emissive for 5 materials
+🎬 Generating emissive pulse animation...
+✅ Created emissive pulse animation with 5 tracks (60 frames)
+🎬 Total animations for export: 1
+✅ Model exported: 016_with_effects.glb
+📊 File size: 2.45 MB
+🎬 Animations exported: 1
+  1. "EmissivePulse" (2.00s, 5 tracks)
+💡 Emissive saved for 5 materials
+🌊 Pulse saved as animation "EmissivePulse"
 ```
 
 ## 🎯 Як переглянути результат
@@ -106,8 +106,8 @@ gltf-validator 016_with_effects.glb
 
 ## 🐛 Troubleshooting
 
-### Питання: Пульсація не грається після завантаження?
-**Відповідь**: Потрібно запустити анімацію через AnimationMixer:
+### Question: Pulse not playing after loading?
+**Answer**: You need to start the animation using AnimationMixer:
 ```javascript
 const mixer = new THREE.AnimationMixer(model);
 gltf.animations.forEach(clip => {
@@ -118,11 +118,11 @@ gltf.animations.forEach(clip => {
 mixer.update(deltaTime);
 ```
 
-### Питання: Emissive занадто тьмяне?
-**Відповідь**: Збільште:
-1. Glow Intensity слайдер (0-5)
-2. Exposure слайдер (0.1-2)
-3. Renderer.toneMapping (може пригнічувати emissive)
+### Question: Emissive too dim?
+**Answer**: Increase:
+1. Glow Intensity slider (0-5)
+2. Exposure slider (0.1-2)
+3. Renderer.toneMapping (may suppress emissive)
 
 ### Питання: Bloom не зберігся?
 **Відповідь**: Це нормально! Bloom - це **post-processing ефект**, він не може бути збережений в GLB. Зберігається тільки **emissive свічення матеріалів**.
@@ -151,8 +151,8 @@ mixer.update(deltaTime);
 pulse = sin((t / duration) * π * 2 * pulseSpeed) * 0.5 + 0.5
 intensity = baseIntensity * (0.5 + pulse * pulseIntensity)
 ```
-- **pulseSpeed**: 2.0 (швидкість пульсації)
-- **pulseIntensity**: 0.5 (амплітуда 50%)
+- **pulseSpeed**: 2.0 (pulse speed)
+- **pulseIntensity**: 0.5 (amplitude 50%)
 - **baseIntensity**: glowParams.intensity * 0.1
 
 ## 🎉 Результат

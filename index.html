@@ -14,19 +14,19 @@
     
     <!-- Model Selection -->
     <div class="model-selector">
-      <h3>Вибір моделі</h3>
+  <h3>Model Selection</h3>
       
       <!-- File Upload Section -->
       <div class="file-upload-section">
         <input type="file" id="file-input" accept=".glb,.gltf" style="display: none;">
         <button id="upload-button" class="upload-btn">
-          📁 Завантажити GLB/GLTF
+          📁 Upload GLB/GLTF
         </button>
         <button id="export-button" class="export-btn" onclick="window.app?.exportModelWithEffects()">
-          💾 Експортувати з ефектами
+          💾 Export with Effects
         </button>
         <div class="drag-hint">
-          💡 Або перетягніть файл на сцену
+          💡 Or drag & drop a file onto the scene
         </div>
         <div id="file-info" class="file-info hidden">
           <span id="file-name"></span>
@@ -35,9 +35,13 @@
       </div>
       
       <div class="model-grid">
-        <div class="model-card active" data-model="class-out_emision-in .glb">
+        <div class="model-card active" data-model="class-out_emision-inside 14.glb">
           <div class="model-preview">🌠</div>
           <span>Model (default)</span>
+        </div>
+        <div class="model-card" data-model="class-out_emision-in .glb">
+          <div class="model-preview">🌠</div>
+          <span>Model (old)</span>
         </div>
         <div class="model-card" data-model="016.glb">
           <div class="model-preview">🌠</div>
@@ -91,11 +95,11 @@
         <div class="radio-group">
           <label class="radio-label">
             <input type="radio" name="bloom-mode" value="simple" checked> 
-            Простий
+            Simple
           </label>
           <label class="radio-label">
             <input type="radio" name="bloom-mode" value="selective"> 
-            Селективний
+            Selective
           </label>
         </div>
       </div>
@@ -105,7 +109,7 @@
         <div class="radio-group">
           <label class="radio-label">
             <input type="radio" name="glow-mode" value="separate"> 
-            Окремі мешi
+            Separate meshes
           </label>
           <label class="radio-label">
             <input type="radio" name="glow-mode" value="emissive" checked> 
@@ -144,17 +148,38 @@
         <input type="range" id="glow-hue" min="0" max="1" step="0.01" value="0.06">
       </div>
       
-      <button id="pulse-button" class="pulse-btn">💫 Увімкнути пульсацію</button>
+  <button id="pulse-button" class="pulse-btn">💫 Enable Pulse</button>
+  <button id="scene-light-toggle" class="pulse-btn">🔆 Enable Light</button>
+  <div class="settings-actions">
+    <button id="info-button" class="secondary-btn">ℹ️ How it works</button>
+    <button id="save-settings" class="secondary-btn">💾 Save Settings</button>
+    <button id="reset-settings" class="secondary-btn">♻️ Reset Settings</button>
+  </div>
+  <!-- Info modal -->
+  <div id="info-modal" class="info-modal hidden" aria-hidden="true">
+    <div class="info-modal__content">
+      <button id="info-close" class="info-modal__close">✕</button>
+      <h2>Quick start — How it works</h2>
+      <ul>
+        <li>Load a GLB/GLTF model (drag & drop or use model selector).</li>
+        <li>Use Bloom / Glow settings to tune visual effects.</li>
+        <li>Enable Pulsation for emissive animation; enable Scene Light to let emissive illuminate other parts.</li>
+        <li>Save settings to keep them locally or Reset to defaults.</li>
+        <li>Export with effects to get a GLB suitable for viewers (animations preserved when possible).</li>
+        <li>Shortcut: <strong>Ctrl/Cmd + Shift + S</strong> — toggle settings panel.</li>
+      </ul>
+    </div>
+  </div>
       
-      <!-- Власне освітлення - Приховано -->
-      <!-- Налаштування світіння об'єктів - Приховано -->
+  <!-- Custom lighting - Hidden -->
+  <!-- Glow settings - Hidden -->
       </div>
     </div>
     
     <!-- Loading Indicator -->
     <div id="loading-indicator" class="loading">
       <div class="spinner"></div>
-      <p>Завантаження моделі...</p>
+  <p>Loading model...</p>
     </div>
   </div>
   

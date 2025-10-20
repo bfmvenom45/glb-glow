@@ -48,20 +48,27 @@ export class SceneManager {
   }
   
   setupLighting() {
-    // Ambient light
+    // Ambient light (disabled by default)
     const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-    this.scene.add(ambientLight);
-    
-    // Directional light
+    // this.scene.add(ambientLight);
+
+    // Directional light (disabled by default)
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
-    this.scene.add(directionalLight);
-    
-    // Point light для додаткового освітлення
+    // this.scene.add(directionalLight);
+
+    // Point light для додаткового освітлення (disabled by default)
     const pointLight = new THREE.PointLight(0x4f9eff, 0.5, 10);
     pointLight.position.set(-5, 3, -5);
-    this.scene.add(pointLight);
+    // this.scene.add(pointLight);
+
+    // Зберігаємо базові лампи щоб керувати ними окремо
+    this.baseLights = {
+      ambient: ambientLight,
+      directional: directionalLight,
+      point: pointLight
+    };
   }
   
   update() {
@@ -79,7 +86,7 @@ export class SceneManager {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     
-    this.renderer.setSize(width, height);
+    // this.renderer.setSize(width, height);
   }
   
   setExposure(exposure) {
@@ -89,32 +96,32 @@ export class SceneManager {
   }
   
   addCustomLighting(model) {
-    // Видаляємо попереднє власне освітлення
-    this.removeCustomLighting();
+  // Remove previous custom lighting
+    // this.removeCustomLighting();
     
     // Обчислюємо розміри моделі
     const box = new THREE.Box3().setFromObject(model);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     
-    // 1. Головне освітлення (замість сонця) - за замовчуванням вимкнено
+  // 1. Main lighting (acts like sun) - disabled by default
     const mainLight = new THREE.DirectionalLight(0xffffff, 0);
     mainLight.position.set(
-      center.x + size.x * 0.5, 
-      center.y + size.y * 1.5, 
-      center.z + size.z * 0.5
+      // center.x + size.x * 0.5, 
+      // center.y + size.y * 1.5, 
+      // center.z + size.z * 0.5
     );
     mainLight.target.position.copy(center);
     mainLight.castShadow = true;
     this.scene.add(mainLight);
-    this.scene.add(mainLight.target);
+    // this.scene.add(mainLight.target);
     
-    // 2. Внутрішнє свічення моделі - за замовчуванням вимкнено
+  // 2. Inner model glow - disabled by default
     const innerLight = new THREE.PointLight(0xffffaa, 0, size.length());
-    innerLight.position.copy(center);
-    this.scene.add(innerLight);
+    // innerLight.position.copy(center);
+    // this.scene.add(innerLight);
     
-    // 3. Підсвічування знизу - за замовчуванням вимкнено
+  // 3. Bottom accent light - disabled by default
     const bottomLight = new THREE.PointLight(0xff8800, 0, size.length() * 0.8);
     bottomLight.position.set(center.x, center.y - size.y * 0.1, center.z);
     this.scene.add(bottomLight);
@@ -122,15 +129,15 @@ export class SceneManager {
     // 4. Акцентне освітлення
     const accentLight = new THREE.SpotLight(0xff0080, 1.0, size.length() * 1.5, Math.PI * 0.3);
     accentLight.position.set(
-      center.x - size.x * 0.8, 
-      center.y + size.y * 0.8, 
-      center.z + size.z * 0.8
+      // center.x - size.x * 0.8, 
+      // center.y + size.y * 0.8, 
+      // center.z + size.z * 0.8
     );
     accentLight.target.position.copy(center);
-    this.scene.add(accentLight);
-    this.scene.add(accentLight.target);
+    // this.scene.add(accentLight);
+    // this.scene.add(accentLight.target);
     
-    console.log('✨ Додано власне освітлення моделі');
+  console.log('✨ Added custom lighting to model');
     
     // Зберігаємо посилання для подальшого управління
     this.customLights = {
@@ -145,34 +152,57 @@ export class SceneManager {
     if (this.customLights) {
       Object.values(this.customLights).forEach(light => {
         if (light.target) {
-          this.scene.remove(light.target);
+          // this.scene.remove(light.target);
         }
-        this.scene.remove(light);
+        // this.scene.remove(light);
       });
-      this.customLights = null;
+      // this.customLights = null;
     }
+  }
+
+  // Manage base scene lighting (enable/disable)
+  toggleSceneLights(enabled) {
+    if (!this.baseLights) {
+      console.warn('toggleSceneLights: базові лампи не ініціалізовано');
+      return;
+    }
+    Object.values(this.baseLights).forEach(light => {
+      if (!light) return;
+      if (enabled) {
+        if (!light.parent) this.scene.add(light);
+        light.visible = true;
+      } else {
+        light.visible = false;
+      }
+    });
+  console.log(`🔆 Base scene lighting ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  isSceneLightsEnabled() {
+    if (!this.baseLights || !this.baseLights.ambient) return false;
+    return !!this.baseLights.ambient.visible;
   }
   
   updateCustomLighting(params) {
     if (params.toggleLighting) {
       if (params.useCustom) {
-        // Вмикаємо власне освітлення
+  // Enable custom lighting
         if (this.customLights) {
           Object.values(this.customLights).forEach(light => {
             light.visible = true;
             if (light.target) light.target.visible = true;
           });
         }
-        console.log('🔄 Увімкнено власне освітлення');
+  console.log('🔄 Custom lighting enabled');
       } else {
-        // Вимикаємо власне освітлення (залишається тільки базове з setupLighting)
+  // Disable custom lighting (leaves only base from setupLighting)
         if (this.customLights) {
           Object.values(this.customLights).forEach(light => {
             light.visible = false;
             if (light.target) light.target.visible = false;
           });
         }
-        console.log('🔄 Увімкнено оригінальне освітлення');
+  console.log('🔄 Restored original lighting');
       }
       return;
     }
@@ -191,6 +221,77 @@ export class SceneManager {
         this.customLights.inner.color.set(params.innerColor);
       }
     }
+  }
+  
+  addGlassThickness(root, { thickness = 0.02, createInner = true } = {}) {
+    if (!root) return;
+    root.traverse(child => {
+      if (!child.isMesh) return;
+
+      const name = (child.name || '').toLowerCase();
+      const mat = child.material;
+
+      const looksLikeGlass =
+        (mat && (mat.transmission && mat.transmission > 0)) ||
+        /glass|window|pane| стекло|вікно/.test(name);
+
+      if (!looksLikeGlass) return;
+
+      // Создаём физический материал для стекла
+      const phys = new THREE.MeshPhysicalMaterial({
+        color: mat && mat.color ? mat.color.clone() : new THREE.Color(0xffffff),
+        metalness: 0,
+        roughness: 0,
+        transmission: 0.9,
+        transparent: true,
+        opacity: 1,
+        ior: 1.52,
+        thickness: thickness,
+        attenuationDistance: 0.5,
+        attenuationColor: new THREE.Color(0xffffff),
+        envMapIntensity: 1,
+        clearcoat: 0,
+        reflectivity: 0.5,
+        side: THREE.FrontSide
+      });
+
+      // сохранить текстуры/эмиссию если есть
+      if (mat && mat.map) phys.map = mat.map;
+      if (mat && mat.emissive) phys.emissive = mat.emissive.clone();
+
+      child.material = phys;
+
+      // Создаём внутреннюю оболочку — копия геометрии смещённая по нормалям внутрь
+      if (createInner) {
+        const geo = child.geometry.clone();
+        if (geo.attributes.normal && geo.attributes.position) {
+          const pos = geo.attributes.position;
+          const nrm = geo.attributes.normal;
+          const count = pos.count;
+
+          // смещаем позиции по нормалям
+          for (let i = 0; i < count; i++) {
+            const px = pos.getX(i) - nrm.getX(i) * thickness * 0.5;
+            const py = pos.getY(i) - nrm.getY(i) * thickness * 0.5;
+            const pz = pos.getZ(i) - nrm.getZ(i) * thickness * 0.5;
+            pos.setXYZ(i, px, py, pz);
+          }
+          pos.needsUpdate = true;
+          geo.computeVertexNormals();
+
+          const innerMat = phys.clone();
+          innerMat.side = THREE.BackSide;
+          // чуть более тусклая внутренняя сторона:
+          if (innerMat.emissive) innerMat.emissive.multiplyScalar(0.6);
+          if (innerMat.color) innerMat.color.multiplyScalar(0.9);
+
+          const inner = new THREE.Mesh(geo, innerMat);
+          inner.name = `${child.name}_inner`;
+          // расположить как дочерний (локальные трансформации унаследуются)
+          child.add(inner);
+        }
+      }
+    });
   }
   
   getRenderer() {

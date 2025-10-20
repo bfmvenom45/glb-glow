@@ -3,18 +3,18 @@ import * as THREE from 'three';
 export class GlowManager {
   constructor() {
     this.glowMeshes = [];
-    this.originalMaterials = new Map(); // Зберігаємо оригінальні матеріали
-    this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
-    this.pulseSpeed = 3.0;  // Відновлено швидку анімацію
-    this.pulseIntensity = 1.0;  // Відновлено сильну пульсацію
+  this.originalMaterials = new Map(); // Store original materials
+  this.pulseEnabled = true;  // Enable pulse by default
+  this.pulseSpeed = 3.0;  // Pulse speed (restored)
+  this.pulseIntensity = 1.0;  // Pulse intensity (restored)
     this.glowMode = 'emissive'; // 'separate' або 'emissive'
     
     this.params = {
-      intensity: 2.0,  // Яскраве свічення
+      intensity: 2.0,  // Bright glow
       hue: 0.06
     };
-    
-    // 🎯 Налаштування свічення
+
+    // 🎯 Glow settings
     this.glowSettings = {
       eyes: true,
       lights: true,
@@ -44,28 +44,28 @@ export class GlowManager {
         const shouldGlow = this.shouldMeshGlow(child);
         
         if (shouldGlow) {
-          // Зберігаємо оригінальний матеріал
+          // Save the original material
           if (!this.originalMaterials.has(child.uuid)) {
             this.originalMaterials.set(child.uuid, child.material.clone());
           }
-          
-          // Додаємо emissive властивості
+
+          // Apply emissive properties
           if (child.material.emissive) {
             const glowColor = new THREE.Color().setHSL(this.params.hue, 1, 0.3);
             child.material.emissive.copy(glowColor);
             child.material.emissiveIntensity = this.params.intensity * 0.1;
           }
-          
-          // Додаємо до bloom шару
+
+          // Add to bloom layer
           child.layers.enable(1);
-          this.glowMeshes.push(child); // Зберігаємо посилання для оновлення
-          
-          console.log(`✨ Додано свічення до: ${child.name || 'безіменний меш'}`);
+          this.glowMeshes.push(child); // Keep reference for updates
+
+          console.log(`✨ Added glow to: ${child.name || 'unnamed mesh'}`);
         }
       }
     });
     
-    console.log(`Додано emissive свічення до ${this.glowMeshes.length} матеріалів`);
+  console.log(`Added emissive glow to ${this.glowMeshes.length} materials`);
   }
   
   addSeparateGlow(model) {
@@ -95,19 +95,19 @@ export class GlowManager {
         model.add(glowMesh);
         this.glowMeshes.push(glowMesh);
         
-        console.log(`✨ Створено окремий glow для: ${mesh.name || 'безіменний меш'}`);
+  console.log(`✨ Created separate glow for: ${mesh.name || 'unnamed mesh'}`);
         
       } catch (error) {
-        console.warn('Не вдалося створити glow для меша:', error);
+  console.warn('Failed to create glow for mesh:', error);
       }
     });
     
-    console.log(`Додано окреме свічення до ${this.glowMeshes.length} мешів`);
+  console.log(`Added separate glow to ${this.glowMeshes.length} meshes`);
   }
   
   clearGlowMeshes() {
     if (this.glowMode === 'emissive') {
-      // Відновлюємо оригінальні матеріали
+  // Restore original materials
       this.glowMeshes.forEach(mesh => {
         const originalMaterial = this.originalMaterials.get(mesh.uuid);
         if (originalMaterial && mesh.material) {
@@ -117,7 +117,7 @@ export class GlowManager {
       });
       this.originalMaterials.clear();
     } else {
-      // Видаляємо окремі glow меши
+  // Remove separate glow meshes
       this.glowMeshes.forEach(mesh => {
         if (mesh.parent) {
           mesh.parent.remove(mesh);
@@ -130,14 +130,14 @@ export class GlowManager {
         }
       });
     }
-    this.glowMeshes = [];
+  this.glowMeshes = [];
   }
   
   updateParams(params) {
     Object.assign(this.params, params);
     
     if (this.glowMode === 'emissive') {
-      // Оновлення emissive кольору
+      // Update emissive color
       this.glowMeshes.forEach(mesh => {
         if (mesh.material && mesh.material.emissive) {
           const glowColor = new THREE.Color().setHSL(this.params.hue, 1, 0.3);
@@ -146,7 +146,7 @@ export class GlowManager {
         }
       });
     } else {
-      // Оновлення кольору окремих glow мешів
+      // Update color of separate glow meshes
       this.glowMeshes.forEach(mesh => {
         if (mesh.material) {
           mesh.material.color.setHSL(this.params.hue, 1, 0.5);
@@ -157,7 +157,7 @@ export class GlowManager {
   
   setGlowMode(mode) {
     this.glowMode = mode;
-    console.log('Glow режим змінено на:', mode);
+  console.log('Glow mode changed to:', mode);
   }
   
   getGlowMode() {
@@ -166,7 +166,7 @@ export class GlowManager {
   
   setPulseEnabled(enabled) {
     this.pulseEnabled = enabled;
-    console.log('Пульсація', enabled ? 'увімкнена' : 'вимкнена');
+  console.log('Pulse', enabled ? 'enabled' : 'disabled');
   }
   
   update() {
@@ -182,12 +182,12 @@ export class GlowManager {
       // Оновлення emissive властивостей
       this.glowMeshes.forEach(mesh => {
         if (mesh.material && mesh.material.emissive) {
-          // 🎨 НАЛАШТУВАННЯ ПУЛЬСАЦІЇ:
-          // Базова яскравість: 0.3 (0.0-1.0) - чим більше, тим яскравіше завжди
-          // Амплітуда пульсації: intensity * 0.2 - чим більше множник, тим сильніша пульсація
+          // 🎨 PULSE SETTINGS:
+          // Base brightness: 0.3 (0.0-1.0) - higher means brighter base
+          // Pulse amplitude: intensity * 0.2 - larger multiplier = stronger pulse
           const glowColor = new THREE.Color().setHSL(this.params.hue, 1, 0.3 + intensity * 0.2);
           mesh.material.emissive.copy(glowColor);
-          // Інтенсивність світіння: intensity * 0.3 - збільшено для яскравішого світла
+          // Emissive intensity: intensity * 0.3 - increased for brighter glow
           mesh.material.emissiveIntensity = intensity * 0.3;
         }
       });
@@ -203,24 +203,24 @@ export class GlowManager {
     }
   }
   
-  // 🎯 ГОЛОВНА ФУНКЦІЯ НАЛАШТУВАННЯ - ЩО МАЄ СВІТИТИСЯ
+  // 🎯 MAIN CONFIG FUNCTION - WHAT SHOULD GLOW
   shouldMeshGlow(mesh) {
-    // Якщо увімкнено "всі об'єкти" - світиться все
+  // If "all" is enabled - everything glows
     if (this.glowSettings.all) {
       return true;
     }
     
-    // ========== НАЛАШТУВАННЯ ДЛЯ SUSANNA1 ==========
+  // ========== SETTINGS FOR SUSANNA1 ==========
     
     // 1️⃣ По назві об'єкта (найточніший спосіб)
     if (mesh.name && this.glowSettings.eyes) {
       const name = mesh.name.toLowerCase();
       
-      // Світяться елементи з такими назвами:
+  // Elements with these names will glow:
       const eyeNames = ['eye', 'pupil', 'iris'];
       const hasEyeName = eyeNames.some(keyword => name.includes(keyword));
       if (hasEyeName) {
-        console.log(`👁️ Знайдено очі для свічення: ${mesh.name}`);
+  console.log(`👁️ Found eyes for glow: ${mesh.name}`);
         return true;
       }
     }
@@ -228,14 +228,14 @@ export class GlowManager {
     if (mesh.name && this.glowSettings.lights) {
       const name = mesh.name.toLowerCase();
       
-      // Світяться світлові елементи:
+  // Light elements that should glow:
       const lightNames = [
         'light', 'glow', 'emission', 'lamp', 'bulb', 
         'neon', 'screen', 'display', 'led', 'torch'
       ];
       const hasLightName = lightNames.some(keyword => name.includes(keyword));
       if (hasLightName) {
-        console.log(`💡 Знайдено світло для свічення: ${mesh.name}`);
+  console.log(`💡 Found light for glow: ${mesh.name}`);
         return true;
       }
     }
@@ -244,15 +244,15 @@ export class GlowManager {
     if (mesh.material) {
       const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
       
-      // Світяться прозорі матеріали
+      // Transparent materials glow
       if (this.glowSettings.transparent && material.transparent && material.opacity < 0.9) {
-        console.log(`🔍 Знайдено прозорий матеріал для свічення: ${mesh.name || 'безіменний'}`);
+        console.log(`🔍 Found transparent material for glow: ${mesh.name || 'unnamed'}`);
         return true;
       }
       
-      // Світяться матеріали з emissive кольором
+      // Materials with emissive color glow
       if (this.glowSettings.emissive && material.emissive && material.emissive.getHex() > 0) {
-        console.log(`✨ Знайдено emissive матеріал для свічення: ${mesh.name || 'безіменний'}`);
+        console.log(`✨ Found emissive material for glow: ${mesh.name || 'unnamed'}`);
         return true;
       }
     }
@@ -261,10 +261,10 @@ export class GlowManager {
     return false;
   }
   
-  // 🔧 Оновлення налаштувань світіння
+  // 🔧 Update glow settings
   updateGlowSettings(settings) {
     this.glowSettings = { ...this.glowSettings, ...settings };
-    console.log('🎯 Оновлено налаштування світіння:', this.glowSettings);
+    console.log('🎯 Updated glow settings:', this.glowSettings);
   }
   
   dispose() {

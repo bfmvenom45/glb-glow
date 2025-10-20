@@ -55,7 +55,7 @@ if (material.roughnessMap && material.roughnessMap.channel !== undefined) {
 **Виправлення:**
 ```javascript
 const options = {
-  includeCustomExtensions: false,  // вимкнути custom extensions
+  includeCustomExtensions: false,  // disable custom extensions
   // ...
 };
 ```

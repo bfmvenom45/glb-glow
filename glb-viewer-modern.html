@@ -37,16 +37,16 @@
   <hr style="margin: 12px 0; border: 1px solid rgba(255,255,255,0.3);">
   <label style="display: flex; align-items: center; margin: 8px 0;">
     <input type="radio" name="bloomMode" value="simple" checked style="margin-right: 8px;"> 
-    Простий Bloom
+  Simple Bloom
   </label>
   <label style="display: flex; align-items: center; margin: 8px 0;">
     <input type="radio" name="bloomMode" value="selective" style="margin-right: 8px;"> 
-    Селективний Bloom (Three.js)
+  Selective Bloom (Three.js)
   </label>
   
   <hr style="margin: 12px 0; border: 1px solid rgba(255,255,255,0.3);">
   <button id="pulseToggle" style="width: 100%; padding: 8px; margin: 8px 0; background: rgba(0,170,255,0.3); color: white; border: 1px solid #00aaff; border-radius: 6px; cursor: pointer; font-size: 13px;">
-    💫 Увімкнути пульсацію
+  💫 Enable Pulse
   </button>
 </div>
 
@@ -95,8 +95,8 @@
   // Анімація пульсації
   let pulseEnabled = false;
   let pulseTime = 0;
-  const pulseSpeed = 2.0; // швидкість пульсації
-  const pulseIntensity = 0.5; // інтенсивність пульсації
+  const pulseSpeed = 2.0; // pulse speed
+  const pulseIntensity = 0.5; // pulse intensity
   let baseLightIntensity = 3.0; // базова яскравість
   let baseGlowIntensity = 1.5; // базова яскравість glow
   
@@ -197,7 +197,7 @@
     }
   }
   
-  // Функція пульсації світла
+  // Pulse function
   function updatePulse(deltaTime) {
     if (!pulseEnabled) return;
     
@@ -229,12 +229,12 @@
     const button = document.getElementById('pulseToggle');
     
     if (pulseEnabled) {
-      button.textContent = '💫 Вимкнути пульсацію';
+  button.textContent = '💫 Disable Pulse';
       button.style.background = 'rgba(255,100,100,0.3)';
       button.style.borderColor = '#ff6464';
       pulseTime = 0; // скидаємо час
     } else {
-      button.textContent = '💫 Увімкнути пульсацію';
+  button.textContent = '💫 Enable Pulse';
       button.style.background = 'rgba(0,170,255,0.3)';
       button.style.borderColor = '#00aaff';
       
@@ -256,7 +256,7 @@
     }
   }
 
-  // світло
+  // lighting
   scene.add(new THREE.AmbientLight(0x404040, 0.1)); // темне ambient світло
 
   // ----- Ініціалізація bloom режимів -----
@@ -314,10 +314,10 @@
 
   // Композитори створюються в функціях initSimpleBloom() та initSelectiveBloom()
 
-  // ----- завантаження GLB
+  // ----- loading GLB
   const loader = new GLTFLoader();
   
-  console.log('Спроба завантаження моделі...');
+  console.log('Attempting to load model...');
   
   // Функція для створення ефекту внутрішнього світіння
   function addInnerGlow(object) {
@@ -347,20 +347,20 @@
           glowMaterial = child.material.clone();
         }
         
-        // Налаштовуємо емісію для внутрішнього світіння
-        glowMaterial.emissive = new THREE.Color(0x00aaff); // Блакитне світіння
+      // Configure emissive for inner glow
+        glowMaterial.emissive = new THREE.Color(0x00aaff); // Blue glow
         glowMaterial.emissiveIntensity = 1.5;
         
         // Додаємо прозорість для ефекту
         glowMaterial.transparent = true;
         glowMaterial.opacity = 0.9;
         
-        // Налаштовуємо основний колір з легким відтінком
-        glowMaterial.color = new THREE.Color(0x2244aa);
+  // Configure base color with slight tint
+  glowMaterial.color = new THREE.Color(0x2244aa);
         
         child.material = glowMaterial;
         
-        // Створюємо додатковий mesh для контурного світіння
+  // Create additional mesh for rim glow
         if (child.geometry) {
           const outlineGeometry = child.geometry.clone();
           const outlineMaterial = new THREE.MeshBasicMaterial({
@@ -380,14 +380,14 @@
           child.add(outlineMesh);
         }
       } catch (error) {
-        console.warn('Помилка при застосуванні ефекту світіння до mesh:', error);
+        console.warn('Error applying glow effect to mesh:', error);
       }
     });
   }
 
   // Функція для створення простого об'єкта як fallback
   function createFallbackObject() {
-    console.log('Створюю резервний об\'єкт...');
+  console.log('Creating fallback object...');
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshStandardMaterial({ 
       color: 0x2244aa,
@@ -405,7 +405,7 @@
     currentModel = cube;
     
     scene.add(cube);
-    console.log('Резервний куб з ефектом світіння додано до сцени');
+  console.log('Fallback cube with glow effect added to scene');
   }
 
   // Спочатку спробуємо завантажити модель
@@ -449,16 +449,16 @@
     },
     // onProgress
     (progress) => {
-      console.log('Прогрес завантаження:', (progress.loaded / progress.total * 100) + '%');
+  console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
     },
     // onError
     (error) => {
-      console.error('Помилка завантаження моделі:', error);
-      console.log('Спроба завантаження альтернативної моделі...');
+  console.error('Error loading model:', error);
+  console.log('Attempting to load alternative model...');
       
       // Спробуємо завантажити іншу модель
       loader.load('./Susanna.glb', (gltf) => {
-        console.log('Альтернативна модель завантажена');
+    console.log('Alternative model loaded');
         const root = gltf.scene;
         scene.add(root);
         
@@ -480,7 +480,7 @@
         const scale = 2.0 / size;
         root.scale.setScalar(scale);
         
-        // Застосовуємо ефект внутрішнього світіння
+  // Apply inner glow effect
         addInnerGlow(root);
         
         // Зберігаємо посилання для контролів

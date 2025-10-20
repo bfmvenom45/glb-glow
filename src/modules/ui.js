@@ -6,9 +6,11 @@ export class UIManager {
     this.bloomModeCallback = null;
     this.modelSelectorCallback = null;
     
-  this.pulseEnabled = true;  // Увімкнути пульсацію за дефолтом
-  this.currentModel = 'class-out_emision-in .glb';
+  this.pulseEnabled = true;  // Enable pulse by default
+  this.currentModel = 'class-out_emision-inside 14.glb';
     this.glowMode = 'emissive';
+    this.sceneLightEnabled = false; // Scene base lights disabled by default
+    this.storageKey = 'aestar_ui_settings_v1';
   }
   
   setupBloomControls(callback) {
@@ -52,6 +54,8 @@ export class UIManager {
       pulseButton.addEventListener('click', () => {
         this.pulseEnabled = !this.pulseEnabled;
         this.updatePulseButton();
+        // persist change
+        this.saveSettings();
         callback(this.pulseEnabled);
       });
     }
@@ -104,7 +108,7 @@ export class UIManager {
       });
     });
     
-    // Обробка завантаження файлів
+  // File upload handling
     this.setupFileUpload();
   }
   
@@ -148,7 +152,7 @@ export class UIManager {
     const modelCards = document.querySelectorAll('.model-card');
     modelCards.forEach(c => c.classList.remove('active'));
     
-    // Викликаємо callback для завантаження
+  // Invoke callback for loading
     if (this.fileUploadCallback) {
       this.fileUploadCallback(file);
     }
@@ -175,10 +179,169 @@ export class UIManager {
           all: document.getElementById('glow-all')?.checked || false
         };
         
-        console.log('🎯 Налаштування свічення:', settings);
+  console.log('🎯 Glow settings:', settings);
         callback(settings);
       });
     }
+  }
+
+  // Кнопка вкл/викл базового освітлення сцени
+  setupSceneLightToggle(callback) {
+    this.sceneLightCallback = callback;
+    const btn = document.getElementById('scene-light-toggle');
+    if (!btn) return;
+
+    // initialize button to current state
+    if (this.sceneLightEnabled) btn.classList.add('active');
+    else btn.classList.remove('active');
+    this.updateSceneLightButton();
+
+    btn.addEventListener('click', () => {
+      const isOn = btn.classList.toggle('active');
+      this.sceneLightEnabled = isOn;
+      this.updateSceneLightButton();
+      // persist change
+      this.saveSettings();
+      if (typeof callback === 'function') callback(isOn);
+    });
+  }
+
+  // Save current UI settings to localStorage
+  saveSettings() {
+    try {
+      const settings = {
+        bloomStrength: document.getElementById('strength')?.value,
+        bloomThreshold: document.getElementById('threshold')?.value,
+        bloomRadius: document.getElementById('radius')?.value,
+        exposure: document.getElementById('exposure')?.value,
+        glowIntensity: document.getElementById('glow-intensity')?.value,
+        glowHue: document.getElementById('glow-hue')?.value,
+        bloomMode: document.querySelector('input[name="bloom-mode"]:checked')?.value,
+        glowMode: document.querySelector('input[name="glow-mode"]:checked')?.value,
+        pulseEnabled: this.pulseEnabled,
+        sceneLightEnabled: this.sceneLightEnabled,
+        currentModel: this.currentModel
+      };
+      localStorage.setItem(this.storageKey, JSON.stringify(settings));
+      this.showNotification('Settings saved', 'success');
+    } catch (e) {
+      console.error('Failed to save settings', e);
+      this.showNotification('Failed to save settings', 'error');
+    }
+  }
+
+  // Load settings from localStorage and apply to controls
+  loadSettings() {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (!raw) return false;
+      const settings = JSON.parse(raw);
+
+      if (settings.bloomStrength !== undefined) {
+        const s = document.getElementById('strength');
+        s.value = settings.bloomStrength;
+        document.getElementById('strength-value').textContent = s.value;
+        this.bloomCallback && this.bloomCallback({ bloomStrength: parseFloat(s.value) });
+      }
+
+      if (settings.bloomThreshold !== undefined) {
+        const s = document.getElementById('threshold');
+        s.value = settings.bloomThreshold;
+        document.getElementById('threshold-value').textContent = s.value;
+        this.bloomCallback && this.bloomCallback({ bloomThreshold: parseFloat(s.value) });
+      }
+
+      if (settings.bloomRadius !== undefined) {
+        const s = document.getElementById('radius');
+        s.value = settings.bloomRadius;
+        document.getElementById('radius-value').textContent = s.value;
+        this.bloomCallback && this.bloomCallback({ bloomRadius: parseFloat(s.value) });
+      }
+
+      if (settings.exposure !== undefined) {
+        const s = document.getElementById('exposure');
+        s.value = settings.exposure;
+        document.getElementById('exposure-value').textContent = s.value;
+        this.bloomCallback && this.bloomCallback({ exposure: parseFloat(s.value) });
+      }
+
+      if (settings.glowIntensity !== undefined) {
+        const s = document.getElementById('glow-intensity');
+        s.value = settings.glowIntensity;
+        document.getElementById('glow-intensity-value').textContent = s.value;
+        this.glowCallback && this.glowCallback({ intensity: parseFloat(s.value) });
+      }
+
+      if (settings.glowHue !== undefined) {
+        const s = document.getElementById('glow-hue');
+        s.value = settings.glowHue;
+        document.getElementById('glow-hue-value').textContent = s.value;
+        this.glowCallback && this.glowCallback({ hue: parseFloat(s.value) });
+      }
+
+      if (settings.bloomMode) {
+        const radio = document.querySelector(`input[name="bloom-mode"][value="${settings.bloomMode}"]`);
+        if (radio) radio.checked = true;
+        this.bloomModeCallback && this.bloomModeCallback(settings.bloomMode);
+      }
+
+      if (settings.glowMode) {
+        const radio = document.querySelector(`input[name="glow-mode"][value="${settings.glowMode}"]`);
+        if (radio) radio.checked = true;
+        this.glowModeCallback && this.glowModeCallback(settings.glowMode);
+      }
+
+      if (settings.pulseEnabled !== undefined) {
+        this.pulseEnabled = !!settings.pulseEnabled;
+        this.updatePulseButton();
+        this.pulseCallback && this.pulseCallback(this.pulseEnabled);
+      }
+
+      if (settings.sceneLightEnabled !== undefined) {
+        this.sceneLightEnabled = !!settings.sceneLightEnabled;
+        this.updateSceneLightButton();
+        this.sceneLightCallback && this.sceneLightCallback(this.sceneLightEnabled);
+      }
+
+      if (settings.currentModel) {
+        this.currentModel = settings.currentModel;
+        this.updateModelPreview(this.currentModel);
+        this.modelSelectorCallback && this.modelSelectorCallback(this.currentModel);
+      }
+
+      this.showNotification('Settings loaded', 'info');
+      return true;
+    } catch (e) {
+      console.error('Failed to load settings', e);
+      this.showNotification('Failed to load settings', 'error');
+      return false;
+    }
+  }
+
+  // Reset settings to defaults (and remove from storage)
+  resetSettings() {
+    try {
+      localStorage.removeItem(this.storageKey);
+      // Reload page to ensure full reset (safe and simple)
+      this.showNotification('Settings reset to defaults', 'success');
+      setTimeout(() => window.location.reload(), 400);
+    } catch (e) {
+      console.error('Failed to reset settings', e);
+      this.showNotification('Failed to reset settings', 'error');
+    }
+  }
+
+  updateSceneLightButton() {
+    const btn = document.getElementById('scene-light-toggle');
+    if (!btn) return;
+    btn.textContent = this.sceneLightEnabled ? '🔆 Disable Light' : '🔆 Enable Light';
+    // Match pulse button visuals exactly (same gradients and text color)
+    btn.style.background = this.sceneLightEnabled ?
+      'linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%)' :
+      'linear-gradient(45deg, #667eea 0%, #764ba2 100%)';
+    btn.style.color = '#fff';
+    btn.style.border = 'none';
+    btn.style.boxShadow = this.sceneLightEnabled ? '0 4px 12px #ff6b6b66' : '0 4px 12px #667eea66';
   }
   
   setupCustomLightingControls(callback) {
@@ -187,7 +350,7 @@ export class UIManager {
     // Перевірка чи існує секція custom lighting (може бути прихована)
     const customLightingSection = document.querySelector('.custom-lighting-section');
     if (!customLightingSection) {
-      // Секція прихована - пропускаємо налаштування
+  // Section hidden - skip settings
       console.log('ℹ️ Custom lighting controls приховані');
       return;
     }
@@ -225,8 +388,8 @@ export class UIManager {
         });
         
         toggleButton.textContent = useCustomLighting 
-          ? '🔄 Оригінальне/Власне світло (Власне)' 
-          : '🔄 Оригінальне/Власне світло (Оригінальне)';
+          ? '🔄 Custom/Original Light (Custom)' 
+          : '🔄 Custom/Original Light (Original)';
       });
     }
   }
@@ -249,13 +412,46 @@ export class UIManager {
       console.warn(`Не знайдено елементи для слайдера: ${sliderId}`);
     }
   }
+
+  // Info modal: show/hide and setup
+  setupInfoButton() {
+    const btn = document.getElementById('info-button');
+    const modal = document.getElementById('info-modal');
+    const close = modal ? modal.querySelector('#info-close') : null;
+
+    if (!btn || !modal) return;
+
+    btn.addEventListener('click', () => this.showInfoModal());
+    if (close) close.addEventListener('click', () => this.hideInfoModal());
+
+    // Click outside to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) this.hideInfoModal();
+    });
+  }
+
+  showInfoModal() {
+    const modal = document.getElementById('info-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  hideInfoModal() {
+    const modal = document.getElementById('info-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
   
   updatePulseButton() {
     const pulseButton = document.getElementById('pulse-button');
     if (pulseButton) {
       pulseButton.textContent = this.pulseEnabled ? 
-        '🔴 Вимкнути пульсацію' : 
-        '💫 Увімкнути пульсацію';
+  '🔴 Disable Pulse' : 
+  '💫 Enable Pulse';
       
       pulseButton.style.background = this.pulseEnabled ?
         'linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%)' :
