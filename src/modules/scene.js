@@ -219,19 +219,20 @@ export class SceneManager {
         // For House 17 create a simple static PointLight (no pulsing)
   const defs = this.pulseLightDefaults || {};
   // Reduce radius and increase intensity for a brighter, tighter light
-  const dist = Math.max(size.length() * 0.6, (defs.distance || 6) * 0.4);
+  const dist = Math.max(size.length() * 0.2, (defs.distance || 6) * 0.8);
   const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
-        const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 2.5, dist, defs.decay || 1);
+  // Increase default brightness: multiply baseIntensity to make House17 noticeably brighter
+  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 4, dist, defs.decay || 1);
         houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));
         // Enable shadow casting for the house light and tune shadow params to avoid light leaking
         houseLight.castShadow = true;
         if (houseLight.shadow) {
           // Increase shadow map resolution for crisper shadows
-          houseLight.shadow.mapSize.set(1024, 1024);
+          houseLight.shadow.mapSize.set(2048, 2048);
           // Small bias to reduce shadow acne but avoid excessive peter-panning
           houseLight.shadow.bias = 0.0005;
           // A small radius softens the shadow; increase if needed
-          houseLight.shadow.radius = 1;
+          houseLight.shadow.radius = 20;
           // For point lights the shadow camera is a PerspectiveCamera for each cubemap face;
           // ensure near/far are reasonable to cover the model
           if (houseLight.shadow.camera) {
