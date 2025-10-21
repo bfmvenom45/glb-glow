@@ -213,25 +213,20 @@ export class SceneManager {
     try {
       const name = (modelName || model.name || '').toLowerCase();
       if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
-  const defs = this.pulseLightDefaults || {};
-  const dist = Math.max(size.length() * 1.5, defs.distance || 6);
-  const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
-  const pulseLight = new THREE.PointLight(colorNum, defs.baseIntensity || 0.5, dist, defs.decay || 2);
-        pulseLight.position.copy(center);
-        pulseLight.castShadow = true;
-        model.add(pulseLight); // attach to model so it moves/scales with it
+        // For House 17 create a simple static PointLight (no pulsing)
+        const defs = this.pulseLightDefaults || {};
+        const dist = Math.max(size.length() * 1.5, defs.distance || 6);
+        const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
+        const houseLight = new THREE.PointLight(colorNum, defs.baseIntensity || 0.8, dist, defs.decay || 2);
+        houseLight.position.copy(center);
+        houseLight.castShadow = true;
+        model.add(houseLight);
 
-        // store for update loop (use defaults)
-        this.pulseLights = this.pulseLights || [];
-        this.pulseLights.push({
-          light: pulseLight,
-          baseIntensity: defs.baseIntensity || 0.5,
-          amplitude: defs.amplitude || 1.2,
-          speed: defs.speed || 1.0,
-          offset: Math.random() * Math.PI * 2
-        });
+        // store as custom house17 light for later control
+        this.customLights = this.customLights || {};
+        this.customLights.house17 = houseLight;
 
-        console.log('✨ Added pulsing PointLight inside model:', modelName || model.name);
+        console.log('✨ Added static PointLight inside House 17 model:', modelName || model.name);
       }
     } catch (e) {
       console.warn('Failed to add pulsing light for model', modelName, e);
@@ -394,5 +389,24 @@ export class SceneManager {
   
   getCamera() {
     return this.camera;
+  }
+
+  // Get the stored House17 light, if any
+  getHouse17Light() {
+    return this.customLights && this.customLights.house17 ? this.customLights.house17 : null;
+  }
+
+  // Set position of House17 light (x,y,z) — accepts Vector3 or numbers
+  setHouse17LightPosition(x, y, z) {
+    const light = this.getHouse17Light();
+    if (!light) {
+      console.warn('House17 light not found');
+      return;
+    }
+    if (x && typeof x === 'object' && x.isVector3) {
+      light.position.copy(x);
+    } else {
+      light.position.set(Number(x) || 0, Number(y) || 0, Number(z) || 0);
+    }
   }
 }
