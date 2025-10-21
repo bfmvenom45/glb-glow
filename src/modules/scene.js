@@ -415,6 +415,27 @@ export class SceneManager {
     return this.customLights && this.customLights.house17 ? this.customLights.house17 : null;
   }
 
+  // Set intensity for House17 light
+  setHouse17Intensity(value) {
+    const l = this.getHouse17Light();
+    if (!l) return false;
+    l.intensity = Number(value) || 0;
+    return true;
+  }
+
+  // Set distance (radius) for House17 light
+  setHouse17Distance(value) {
+    const l = this.getHouse17Light();
+    if (!l) return false;
+    l.distance = Number(value) || l.distance;
+    // update shadow camera far accordingly
+    if (l.shadow && l.shadow.camera) {
+      l.shadow.camera.far = Math.max(10, l.distance * 2);
+      if (typeof l.shadow.camera.updateProjectionMatrix === 'function') l.shadow.camera.updateProjectionMatrix();
+    }
+    return true;
+  }
+
   // Set position of House17 light (x,y,z) — accepts Vector3 or numbers
   setHouse17LightPosition(x, y, z) {
     const light = this.getHouse17Light();

@@ -97,6 +97,22 @@ class App {
       const name = (modelPath || '').toLowerCase();
       if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
         this.uiManager.setHouse17ButtonVisible(true);
+        // Sync controls with current light values if available
+        const light = this.sceneManager.getHouse17Light();
+        if (light) {
+          const intensityEl = document.getElementById('house17-intensity');
+          const distEl = document.getElementById('house17-distance');
+          const intensityVal = document.getElementById('house17-intensity-value');
+          const distVal = document.getElementById('house17-distance-value');
+          if (intensityEl && intensityVal) {
+            intensityEl.value = light.intensity;
+            intensityVal.textContent = light.intensity.toFixed(2);
+          }
+          if (distEl && distVal) {
+            distEl.value = light.distance;
+            distVal.textContent = light.distance.toFixed(2);
+          }
+        }
       } else {
         this.uiManager.setHouse17ButtonVisible(false);
       }
@@ -227,6 +243,12 @@ class App {
       if (light) {
         light.visible = !light.visible;
       }
+    });
+
+    // House17 controls (intensity/distance)
+    this.uiManager.setupHouse17Controls({
+      onIntensity: (v) => this.sceneManager.setHouse17Intensity(v),
+      onDistance: (v) => this.sceneManager.setHouse17Distance(v)
     });
 
     // Info button (modal)

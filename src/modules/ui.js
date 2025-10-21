@@ -445,6 +445,35 @@ export class UIManager {
     });
   }
 
+  // Setup House17 specific controls (intensity, distance sliders)
+  setupHouse17Controls(callbacks = {}) {
+    const intensity = document.getElementById('house17-intensity');
+    const dist = document.getElementById('house17-distance');
+    const intensityVal = document.getElementById('house17-intensity-value');
+    const distVal = document.getElementById('house17-distance-value');
+
+    const panel = document.querySelector('.house17-controls');
+
+    if (panel) {
+      // ensure hidden by default; visibility controlled by setHouse17ButtonVisible
+      panel.classList.add('hidden');
+    }
+
+    if (intensity && intensityVal) {
+      intensity.addEventListener('input', (e) => {
+        intensityVal.textContent = e.target.value;
+        if (callbacks.onIntensity) callbacks.onIntensity(Number(e.target.value));
+      });
+    }
+
+    if (dist && distVal) {
+      dist.addEventListener('input', (e) => {
+        distVal.textContent = e.target.value;
+        if (callbacks.onDistance) callbacks.onDistance(Number(e.target.value));
+      });
+    }
+  }
+
   // Show/hide the House17 button depending on active model
   setHouse17ButtonVisible(visible = false) {
     const btn = document.getElementById('house17-light-toggle');
@@ -455,6 +484,16 @@ export class UIManager {
     } else {
       btn.classList.add('hidden');
       btn.setAttribute('aria-hidden', 'true');
+    }
+    const panel = document.querySelector('.house17-controls');
+    if (panel) {
+      if (visible) {
+        panel.classList.remove('hidden');
+        panel.setAttribute('aria-hidden', 'false');
+      } else {
+        panel.classList.add('hidden');
+        panel.setAttribute('aria-hidden', 'true');
+      }
     }
   }
 
