@@ -162,15 +162,11 @@
   </div>
   
   <!-- House17 controls (moved down, shown only for House 17 models) -->
-  <div class="house17-panel">
-    <button id="house17-light-toggle" class="secondary-btn hidden" aria-hidden="true">🏡 Toggle House17 Light</button>
-    <div class="house17-controls hidden" aria-hidden="true">
-      <label>House17 Intensity: <span id="house17-intensity-value">4</span></label>
-      <input type="range" id="house17-intensity" min="0" max="10" step="0.1" value="4">
-      <label>House17 Distance: <span id="house17-distance-value">6</span></label>
-      <input type="range" id="house17-distance" min="0" max="50" step="0.1" value="6">
+    <div class="house17-panel">
+      <!-- Make House17 toggle visually match the main pulse button -->
+      <button id="house17-light-toggle" class="pulse-btn hidden" aria-hidden="true">💫 Enable House17 Pulse</button>
+      <div class="house17-controls hidden" aria-hidden="true"></div>
     </div>
-  </div>
   <!-- Info modal -->
   <div id="info-modal" class="info-modal hidden" aria-hidden="true">
     <div class="info-modal__content">

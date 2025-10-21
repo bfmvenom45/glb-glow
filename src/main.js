@@ -241,8 +241,9 @@ class App {
     this.uiManager.setupHouse17Button(() => {
       const isPulsing = this.sceneManager.isHouse17Pulsing();
       if (!isPulsing) {
-        // start pulsing with reasonable defaults; distance pulses from 0 to 25
-        this.sceneManager.startHouse17Pulse({ speed: 1.0, amplitude: 1.2, distanceMin: 0, distanceMax: 25 });
+        // start pulsing with reasonable defaults; prevent distance hitting 0 to avoid dark center
+        // Use distanceMin >= 1
+        this.sceneManager.startHouse17Pulse({ speed: 0.5, amplitude: 2, distanceMin: 0, distanceMax: 25 });
         this.uiManager.updateHouse17ButtonLabel(true);
       } else {
         this.sceneManager.stopHouse17Pulse();

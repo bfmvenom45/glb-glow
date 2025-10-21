@@ -230,32 +230,41 @@ export class SceneManager {
         // For House 17 create a simple static PointLight (no pulsing)
   const defs = this.pulseLightDefaults || {};
   // Reduce radius and increase intensity for a brighter, tighter light
-  const dist = Math.max(size.length() * 0.2, (defs.distance || 6) * 0.8);
+  const dist = Math.max(size.length() * 0.2, (defs.distance || 2) * 0.8);
   const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
   // Increase default brightness: multiply baseIntensity to make House17 noticeably brighter
-  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 5) * 4, dist, defs.decay || 1);
+  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 4, dist, defs.decay || 1);
         houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));
         // Enable shadow casting for the house light and tune shadow params to avoid light leaking
         houseLight.castShadow = true;
         if (houseLight.shadow) {
           // Increase shadow map resolution for crisper shadows
-          houseLight.shadow.mapSize.set(1024, 1024);
+          houseLight.shadow.mapSize.set(2048, 2048);
           // Small bias to reduce shadow acne but avoid excessive peter-panning
-          houseLight.shadow.bias = 0.0005;
+          houseLight.shadow.bias = 0.0000006;
           // A small radius softens the shadow; increase if needed
           houseLight.shadow.radius = 1;
           // For point lights the shadow camera is a PerspectiveCamera for each cubemap face;
           // ensure near/far are reasonable to cover the model
           if (houseLight.shadow.camera) {
-            houseLight.shadow.camera.near = 0.1;
+            houseLight.shadow.camera.near = 0.01;
             houseLight.shadow.camera.far = Math.max(5, dist * 2);
           }
         }
-        model.add(houseLight);
+  // Add a very weak, no-shadow 'fill' light as child to avoid dark center during pulses
+  const fillLight = new THREE.PointLight(colorNum, 0.0, dist * 0.1, 1);
+  fillLight.position.set(0, 0.1, 0);
+  // Do NOT cast shadows for the fill light — it's only to reduce dark center
+  fillLight.castShadow = false;
+  fillLight.visible = false; // enabled only during pulsing
+  // Attach fill light to the model so it follows model transforms
+  model.add(houseLight);
+  model.add(fillLight);
 
-        // store as custom house17 light for later control
-        this.customLights = this.customLights || {};
-        this.customLights.house17 = houseLight;
+  // store as custom house17 light for later control (and keep reference to the fill light)
+  this.customLights = this.customLights || {};
+  this.customLights.house17 = houseLight;
+  this.customLights.house17Fill = fillLight;
 
         console.log('✨ Added static PointLight inside House 17 model:', modelName || model.name);
       }
@@ -478,6 +487,13 @@ export class SceneManager {
 
     // make sure light is visible
     light.visible = true;
+    // enable fill light (if present) with a small intensity to reduce dark center
+    try {
+      if (this.customLights && this.customLights.house17Fill) {
+        this.customLights.house17Fill.intensity = Math.max(0.08, (cfg.baseIntensity || 1) * 0.05);
+        this.customLights.house17Fill.visible = true;
+      }
+    } catch (e) { /* ignore */ }
     return true;
   }
 
@@ -491,6 +507,13 @@ export class SceneManager {
     // restore base intensity and original distance
     try { cfg.light.intensity = cfg.baseIntensity; } catch (e) { /* ignore */ }
     try { if (cfg.origDistance !== undefined) cfg.light.distance = cfg.origDistance; } catch (e) { /* ignore */ }
+    // disable fill light if present
+    try {
+      if (this.customLights && this.customLights.house17Fill) {
+        this.customLights.house17Fill.intensity = 0;
+        this.customLights.house17Fill.visible = false;
+      }
+    } catch (e) { /* ignore */ }
     delete this.house17PulseCfg;
     return true;
   }
