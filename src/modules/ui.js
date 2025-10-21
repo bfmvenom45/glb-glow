@@ -611,7 +611,7 @@ export class UIManager {
   
   getControlValues() {
     return {
-      bloomStrength: parseFloat(document.getElementById('strength')?.value || 1),
+      bloomStrength: parseFloat(document.getElementById('strength')?.value || 0.01),
       bloomThreshold: parseFloat(document.getElementById('threshold')?.value || 0.1),
       bloomRadius: parseFloat(document.getElementById('radius')?.value || 0.55),
       exposure: parseFloat(document.getElementById('exposure')?.value || 0.1),

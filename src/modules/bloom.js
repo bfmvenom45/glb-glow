@@ -19,9 +19,9 @@ export class BloomManager {
     
     this.params = {
       exposure: 1.0,
-      bloomStrength: 1.5,
+      bloomStrength: 0.01,
       bloomThreshold: 0.1,
-      bloomRadius: 0.4
+      bloomRadius: 0.02
     };
   }
   
