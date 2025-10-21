@@ -76,8 +76,12 @@ export class ModelLoader {
   reject(new Error(`Timeout loading ${modelPath}`));
       }, this.loadTimeout);
       
+      // Ensure path is safe for HTTP requests (encode spaces and special chars)
+      const requestPath = (typeof modelPath === 'string' && !modelPath.match(/^https?:\/\//i)) ? encodeURI(modelPath) : modelPath;
+      console.log(`🔍 Requesting model URL: ${requestPath}`);
+
       this.loader.load(
-        modelPath,
+        requestPath,
         (gltf) => {
           const model = gltf.scene;
           
@@ -133,6 +137,11 @@ export class ModelLoader {
             console.error(`❌ Error loading ${modelPath}:`, error);
           }
           
+          // If server returned HTML (common when file not found on static hosts like Vercel), provide actionable log
+          if (error && error.message && error.message.includes('<!DOCTYPE')) {
+            console.error('❌ Server returned HTML instead of a GLB (likely 404 or directory index). Check that the file path is correct and files are deployed to the `public/` or root static directory on the host. Consider renaming files to avoid spaces or use encoded URLs.');
+          }
+
           // Try to load fallback model
           if (modelPath !== 'House.glb') {
             console.log('🔄 Attempting to load fallback model House.glb');
@@ -152,8 +161,11 @@ export class ModelLoader {
       // Створюємо новий loader без DRACO
       const simpleLoader = new GLTFLoader();
       
+      const requestPath = (typeof modelPath === 'string' && !modelPath.match(/^https?:\/\//i)) ? encodeURI(modelPath) : modelPath;
+      console.log(`🔍 Loading (no DRACO) URL: ${requestPath}`);
+
       simpleLoader.load(
-        modelPath,
+        requestPath,
         (gltf) => {
           const model = gltf.scene;
           
