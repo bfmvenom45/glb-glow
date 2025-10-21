@@ -82,6 +82,13 @@ class App {
       
       // Застосування всіх ефектів
       this.applyAllEffects(model, modelPath);
+      // If model is House 17, show house17 UI button
+      const name = (modelPath || '').toLowerCase();
+      if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
+        this.uiManager.setHouse17ButtonVisible(true);
+      } else {
+        this.uiManager.setHouse17ButtonVisible(false);
+      }
       
     } catch (error) {
   console.error('Error loading model:', error);
@@ -201,6 +208,14 @@ class App {
     // Кнопка вкл/викл базового освітлення сцени
     this.uiManager.setupSceneLightToggle((enabled) => {
       this.sceneManager.toggleSceneLights(enabled);
+    });
+
+    // House17 button hookup
+    this.uiManager.setupHouse17Button(() => {
+      const light = this.sceneManager.getHouse17Light();
+      if (light) {
+        light.visible = !light.visible;
+      }
     });
 
     // Info button (modal)

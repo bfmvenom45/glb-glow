@@ -436,6 +436,30 @@ export class UIManager {
     });
   }
 
+  // Setup House17 light toggle button: visible only when House 17 model active
+  setupHouse17Button(callback) {
+    this.house17Callback = callback;
+    const btn = document.getElementById('house17-light-toggle');
+    if (!btn) return;
+    // Click handler
+    btn.addEventListener('click', () => {
+      if (typeof this.house17Callback === 'function') this.house17Callback();
+    });
+  }
+
+  // Show/hide the House17 button depending on active model
+  setHouse17ButtonVisible(visible = false) {
+    const btn = document.getElementById('house17-light-toggle');
+    if (!btn) return;
+    if (visible) {
+      btn.classList.remove('hidden');
+      btn.setAttribute('aria-hidden', 'false');
+    } else {
+      btn.classList.add('hidden');
+      btn.setAttribute('aria-hidden', 'true');
+    }
+  }
+
   showInfoModal() {
     const modal = document.getElementById('info-modal');
     if (!modal) return;
