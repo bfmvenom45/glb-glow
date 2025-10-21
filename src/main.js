@@ -237,11 +237,16 @@ class App {
       this.sceneManager.toggleSceneLights(enabled);
     });
 
-    // House17 button hookup
+    // House17 button hookup — toggle pulsing on click
     this.uiManager.setupHouse17Button(() => {
-      const light = this.sceneManager.getHouse17Light();
-      if (light) {
-        light.visible = !light.visible;
+      const isPulsing = this.sceneManager.isHouse17Pulsing();
+      if (!isPulsing) {
+        // start pulsing with reasonable defaults
+        this.sceneManager.startHouse17Pulse({ speed: 1.0, amplitude: 1.2 });
+        this.uiManager.updateHouse17ButtonLabel(true);
+      } else {
+        this.sceneManager.stopHouse17Pulse();
+        this.uiManager.updateHouse17ButtonLabel(false);
       }
     });
 
@@ -266,6 +271,9 @@ class App {
   sceneLightBtn.textContent = '🔆 Enable Light';
       }
     }
+    // set initial label for house17 button according to current pulse state
+    const housePulsing = this.sceneManager.isHouse17Pulsing();
+    this.uiManager.updateHouse17ButtonLabel(!!housePulsing);
   }
   
   setupEventListeners() {

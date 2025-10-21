@@ -222,13 +222,13 @@ export class SceneManager {
   const dist = Math.max(size.length() * 0.2, (defs.distance || 6) * 0.8);
   const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
   // Increase default brightness: multiply baseIntensity to make House17 noticeably brighter
-  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 4, dist, defs.decay || 1);
+  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1.2) * 4, dist, defs.decay || 1);
         houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));
         // Enable shadow casting for the house light and tune shadow params to avoid light leaking
         houseLight.castShadow = true;
         if (houseLight.shadow) {
           // Increase shadow map resolution for crisper shadows
-          houseLight.shadow.mapSize.set(2048, 2048);
+          houseLight.shadow.mapSize.set(1024, 1024);
           // Small bias to reduce shadow acne but avoid excessive peter-panning
           houseLight.shadow.bias = 0.0005;
           // A small radius softens the shadow; increase if needed
@@ -237,7 +237,7 @@ export class SceneManager {
           // ensure near/far are reasonable to cover the model
           if (houseLight.shadow.camera) {
             houseLight.shadow.camera.near = 0.1;
-            houseLight.shadow.camera.far = Math.max(10, dist * 2);
+            houseLight.shadow.camera.far = Math.max(5, dist * 2);
           }
         }
         model.add(houseLight);
@@ -434,6 +434,48 @@ export class SceneManager {
       l.shadow.camera.far = Math.max(10, l.distance * 2);
       if (typeof l.shadow.camera.updateProjectionMatrix === 'function') l.shadow.camera.updateProjectionMatrix();
     }
+    return true;
+  }
+
+  // Pulsing controls for House17
+  isHouse17Pulsing() {
+    return !!(this.house17PulseCfg);
+  }
+
+  startHouse17Pulse({ speed = 1.0, amplitude = 1.5, baseIntensity = undefined } = {}) {
+    const light = this.getHouse17Light();
+    if (!light) return false;
+    if (this.isHouse17Pulsing()) return true; // already pulsing
+
+    const cfg = {
+      light,
+      baseIntensity: (baseIntensity !== undefined) ? Number(baseIntensity) : (light.intensity || 1),
+      amplitude: Number(amplitude) || 1.0,
+      speed: Number(speed) || 1.0,
+      offset: Math.random() * 10
+    };
+    // ensure initial intensity set
+    cfg.light.intensity = cfg.baseIntensity;
+
+    this.pulseLights = this.pulseLights || [];
+    this.pulseLights.push(cfg);
+    this.house17PulseCfg = cfg;
+
+    // make sure light is visible
+    light.visible = true;
+    return true;
+  }
+
+  stopHouse17Pulse() {
+    const cfg = this.house17PulseCfg;
+    if (!cfg) return false;
+    // remove from pulseLights
+    if (this.pulseLights && this.pulseLights.length) {
+      this.pulseLights = this.pulseLights.filter(item => item.light !== cfg.light);
+    }
+    // restore base intensity
+    try { cfg.light.intensity = cfg.baseIntensity; } catch (e) { /* ignore */ }
+    delete this.house17PulseCfg;
     return true;
   }
 

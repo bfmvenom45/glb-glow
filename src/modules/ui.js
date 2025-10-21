@@ -445,6 +445,15 @@ export class UIManager {
     });
   }
 
+  // Update label for House17 button (pulse state aware)
+  updateHouse17ButtonLabel(pulsing = false) {
+    const btn = document.getElementById('house17-light-toggle');
+    if (!btn) return;
+    btn.textContent = pulsing ? '🔴 Disable House17 Pulse' : '💫 Enable House17 Pulse';
+    btn.style.background = pulsing ? 'linear-gradient(45deg, #ff6b6b 0%, #ee5a52 100%)' : 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)';
+    btn.style.color = '#fff';
+  }
+
   // Setup House17 specific controls (intensity, distance sliders)
   setupHouse17Controls(callbacks = {}) {
     const intensity = document.getElementById('house17-intensity');
