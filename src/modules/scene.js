@@ -21,7 +21,14 @@ export class SceneManager {
         }
         if (newDefaults.distance !== undefined) item.light.distance = newDefaults.distance;
         if (newDefaults.decay !== undefined) item.light.decay = newDefaults.decay;
-        if (newDefaults.color !== undefined) item.light.color.set(newDefaults.color);
+        if (newDefaults.color !== undefined) {
+          try {
+            item.light.color.set(newDefaults.color);
+          } catch (e) {
+            // if newDefaults.color is hex string like '#ffddaa'
+            item.light.color.set(newDefaults.color.replace('#', '0x'));
+          }
+        }
         if (newDefaults.speed !== undefined) item.speed = newDefaults.speed;
         if (newDefaults.amplitude !== undefined) item.amplitude = newDefaults.amplitude;
       });

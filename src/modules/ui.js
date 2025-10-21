@@ -189,18 +189,20 @@ export class UIManager {
   setupPulsingControls(callback) {
     this.pulsingCallback = callback;
 
-    const q = id => document.getElementById(id);
-    const intensity = q('pl-intensity');
-    const speed = q('pl-speed');
-    const distance = q('pl-distance');
-    const amplitude = q('pl-amplitude');
+  const q = id => document.getElementById(id);
+  const intensity = q('pl-intensity');
+  const speed = q('pl-speed');
+  const distance = q('pl-distance');
+  const amplitude = q('pl-amplitude');
+  const color = q('pl-color');
 
     const updateValues = () => {
       const params = {
         baseIntensity: parseFloat(intensity?.value || 1.0),
         speed: parseFloat(speed?.value || 1.0),
         distance: parseFloat(distance?.value || 6),
-        amplitude: parseFloat(amplitude?.value || 1.2)
+        amplitude: parseFloat(amplitude?.value || 1.2),
+        color: color?.value || '#ffddaa'
       };
       // update UI labels
       const setLabel = (id, v) => {
@@ -211,6 +213,8 @@ export class UIManager {
       setLabel('pl-speed-value', params.speed);
       setLabel('pl-distance-value', params.distance);
       setLabel('pl-amplitude-value', params.amplitude);
+  const colorLabel = document.getElementById('pl-color-value');
+  if (colorLabel) colorLabel.textContent = params.color;
 
       if (typeof this.pulsingCallback === 'function') this.pulsingCallback(params);
 
@@ -224,7 +228,7 @@ export class UIManager {
       }
     };
 
-    [intensity, speed, distance, amplitude].forEach(el => {
+    [intensity, speed, distance, amplitude, color].forEach(el => {
       if (!el) return;
       el.addEventListener('input', updateValues);
     });
@@ -239,6 +243,7 @@ export class UIManager {
           if (speed) speed.value = settings.pulsing.speed;
           if (distance) distance.value = settings.pulsing.distance;
           if (amplitude) amplitude.value = settings.pulsing.amplitude;
+          if (color && settings.pulsing.color) color.value = settings.pulsing.color;
           // apply to scene
           updateValues();
         }
