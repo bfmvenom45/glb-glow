@@ -22,11 +22,12 @@ export class SceneManager {
         if (newDefaults.distance !== undefined) item.light.distance = newDefaults.distance;
         if (newDefaults.decay !== undefined) item.light.decay = newDefaults.decay;
         if (newDefaults.color !== undefined) {
-          try {
-            item.light.color.set(newDefaults.color);
-          } catch (e) {
-            // if newDefaults.color is hex string like '#ffddaa'
-            item.light.color.set(newDefaults.color.replace('#', '0x'));
+          // Normalize and apply color immediately
+          const num = (typeof this._normalizeColor === 'function') ? this._normalizeColor(newDefaults.color) : null;
+          if (num !== null) {
+            item.light.color.setHex(num);
+          } else {
+            try { item.light.color.set(newDefaults.color); } catch (e) { /* ignore */ }
           }
         }
         if (newDefaults.speed !== undefined) item.speed = newDefaults.speed;
@@ -83,6 +84,20 @@ export class SceneManager {
   };
     
     console.log('SceneManager ініціалізовано');
+  }
+
+  // Helper: normalize color input ("#rrggbb" or number) to numeric hex
+  _normalizeColor(color) {
+    if (color === undefined || color === null) return null;
+    if (typeof color === 'number') return color;
+    if (typeof color === 'string') {
+      const s = color.trim();
+      if (s.startsWith('#')) return parseInt(s.slice(1), 16);
+      if (s.startsWith('0x')) return parseInt(s.slice(2), 16);
+      const parsed = parseInt(s, 16);
+      return isNaN(parsed) ? null : parsed;
+    }
+    return null;
   }
   
   setupLighting() {
@@ -198,9 +213,10 @@ export class SceneManager {
     try {
       const name = (modelName || model.name || '').toLowerCase();
       if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
-        const defs = this.pulseLightDefaults || {};
-        const dist = Math.max(size.length() * 1.5, defs.distance || 6);
-        const pulseLight = new THREE.PointLight(defs.color || 0xffddaa, defs.baseIntensity || 0.5, dist, defs.decay || 2);
+  const defs = this.pulseLightDefaults || {};
+  const dist = Math.max(size.length() * 1.5, defs.distance || 6);
+  const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
+  const pulseLight = new THREE.PointLight(colorNum, defs.baseIntensity || 0.5, dist, defs.decay || 2);
         pulseLight.position.copy(center);
         pulseLight.castShadow = true;
         model.add(pulseLight); // attach to model so it moves/scales with it
