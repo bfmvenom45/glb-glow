@@ -9,6 +9,24 @@ export class SceneManager {
     this.renderer = null;
     this.controls = null;
   }
+
+  // Update defaults for pulsing lights and apply to existing ones
+  updatePulsingLightDefaults(newDefaults = {}) {
+    this.pulseLightDefaults = Object.assign({}, this.pulseLightDefaults || {}, newDefaults);
+    if (this.pulseLights && this.pulseLights.length > 0) {
+      this.pulseLights.forEach(item => {
+        if (newDefaults.baseIntensity !== undefined) {
+          item.baseIntensity = newDefaults.baseIntensity;
+          item.light.intensity = item.baseIntensity;
+        }
+        if (newDefaults.distance !== undefined) item.light.distance = newDefaults.distance;
+        if (newDefaults.decay !== undefined) item.light.decay = newDefaults.decay;
+        if (newDefaults.color !== undefined) item.light.color.set(newDefaults.color);
+        if (newDefaults.speed !== undefined) item.speed = newDefaults.speed;
+        if (newDefaults.amplitude !== undefined) item.amplitude = newDefaults.amplitude;
+      });
+    }
+  }
   
   init() {
     // Створення сцени
@@ -47,6 +65,15 @@ export class SceneManager {
   // Clock for animations (pulsing lights)
   this.clock = new THREE.Clock();
   this.pulseLights = [];
+  // Defaults for pulsing lights (can be updated at runtime)
+  this.pulseLightDefaults = {
+    color: 0xffddaa,
+    baseIntensity: 0.5,
+    distance: 6,
+    decay: 2,
+    speed: 1.0,
+    amplitude: 1.2
+  };
     
     console.log('SceneManager ініціалізовано');
   }
@@ -164,14 +191,22 @@ export class SceneManager {
     try {
       const name = (modelName || model.name || '').toLowerCase();
       if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
-        const pulseLight = new THREE.PointLight(0xffddaa, 1.2, Math.max(size.length() * 1.5, 6), 2);
+        const defs = this.pulseLightDefaults || {};
+        const dist = Math.max(size.length() * 1.5, defs.distance || 6);
+        const pulseLight = new THREE.PointLight(defs.color || 0xffddaa, defs.baseIntensity || 0.5, dist, defs.decay || 2);
         pulseLight.position.copy(center);
         pulseLight.castShadow = true;
         model.add(pulseLight); // attach to model so it moves/scales with it
 
-        // store for update loop
+        // store for update loop (use defaults)
         this.pulseLights = this.pulseLights || [];
-        this.pulseLights.push({ light: pulseLight, baseIntensity: 0.5, amplitude: 1.2, speed: 1.0, offset: Math.random() * Math.PI * 2 });
+        this.pulseLights.push({
+          light: pulseLight,
+          baseIntensity: defs.baseIntensity || 0.5,
+          amplitude: defs.amplitude || 1.2,
+          speed: defs.speed || 1.0,
+          offset: Math.random() * Math.PI * 2
+        });
 
         console.log('✨ Added pulsing PointLight inside model:', modelName || model.name);
       }

@@ -155,6 +155,24 @@ class App {
     this.uiManager.setupPulseControl((enabled) => {
       this.glowManager.setPulseEnabled(enabled);
     });
+
+    // Setup pulsing light controls (affect pulsing PointLights in scene)
+    if (typeof this.uiManager.setupPulsingControls === 'function') {
+      this.uiManager.setupPulsingControls((params) => {
+        // map UI -> scene defaults
+        this.sceneManager.updatePulsingLightDefaults({
+          baseIntensity: params.baseIntensity,
+          speed: params.speed,
+          distance: params.distance,
+          amplitude: params.amplitude
+        });
+      });
+      // apply initial UI values (if any)
+      const pl = (JSON.parse(localStorage.getItem(this.uiManager.storageKey) || '{}').pulsing) || null;
+      if (pl) {
+        this.sceneManager.updatePulsingLightDefaults(pl);
+      }
+    }
     
   // Setup bloom mode selection
     this.uiManager.setupBloomModeControl((mode) => {

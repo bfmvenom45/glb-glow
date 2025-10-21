@@ -185,6 +185,69 @@ export class UIManager {
     }
   }
 
+  // Setup controls for pulsing lights (global parameters)
+  setupPulsingControls(callback) {
+    this.pulsingCallback = callback;
+
+    const q = id => document.getElementById(id);
+    const intensity = q('pl-intensity');
+    const speed = q('pl-speed');
+    const distance = q('pl-distance');
+    const amplitude = q('pl-amplitude');
+
+    const updateValues = () => {
+      const params = {
+        baseIntensity: parseFloat(intensity?.value || 1.0),
+        speed: parseFloat(speed?.value || 1.0),
+        distance: parseFloat(distance?.value || 6),
+        amplitude: parseFloat(amplitude?.value || 1.2)
+      };
+      // update UI labels
+      const setLabel = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = typeof v === 'number' ? v.toFixed(2) : v;
+      };
+      setLabel('pl-intensity-value', params.baseIntensity);
+      setLabel('pl-speed-value', params.speed);
+      setLabel('pl-distance-value', params.distance);
+      setLabel('pl-amplitude-value', params.amplitude);
+
+      if (typeof this.pulsingCallback === 'function') this.pulsingCallback(params);
+
+      // persist pulsing part of settings
+      try {
+        const all = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        all.pulsing = params;
+        localStorage.setItem(this.storageKey, JSON.stringify(all));
+      } catch (e) {
+        console.warn('Failed to persist pulsing settings', e);
+      }
+    };
+
+    [intensity, speed, distance, amplitude].forEach(el => {
+      if (!el) return;
+      el.addEventListener('input', updateValues);
+    });
+
+    // Load existing pulsing values (if any)
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (raw) {
+        const settings = JSON.parse(raw);
+        if (settings.pulsing) {
+          if (intensity) intensity.value = settings.pulsing.baseIntensity;
+          if (speed) speed.value = settings.pulsing.speed;
+          if (distance) distance.value = settings.pulsing.distance;
+          if (amplitude) amplitude.value = settings.pulsing.amplitude;
+          // apply to scene
+          updateValues();
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   // Кнопка вкл/викл базового освітлення сцени
   setupSceneLightToggle(callback) {
     this.sceneLightCallback = callback;
