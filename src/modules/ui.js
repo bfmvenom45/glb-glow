@@ -54,8 +54,7 @@ export class UIManager {
       pulseButton.addEventListener('click', () => {
         this.pulseEnabled = !this.pulseEnabled;
         this.updatePulseButton();
-        // persist change
-        this.saveSettings();
+        // Do not auto-save on toggle; settings are saved explicitly via Save button
         callback(this.pulseEnabled);
       });
     }
@@ -206,8 +205,7 @@ export class UIManager {
       const isOn = btn.classList.toggle('active');
       this.sceneLightEnabled = isOn;
       this.updateSceneLightButton();
-      // persist change
-      this.saveSettings();
+      // Do not auto-save here; user must press Save to persist settings
       if (typeof callback === 'function') callback(isOn);
     });
   }

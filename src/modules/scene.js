@@ -169,9 +169,9 @@ export class SceneManager {
   // 1. Main lighting (acts like sun) - disabled by default
     const mainLight = new THREE.DirectionalLight(0xffffff, 0);
     mainLight.position.set(
-      // center.x + size.x * 0.5, 
-      // center.y + size.y * 1.5, 
-      // center.z + size.z * 0.5
+        center.x + size.x * 0.5, 
+        center.y + size.y * 1.5, 
+        center.z + size.z * 0.5
     );
     mainLight.target.position.copy(center);
     mainLight.castShadow = true;
@@ -214,12 +214,12 @@ export class SceneManager {
       const name = (modelName || model.name || '').toLowerCase();
       if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
         // For House 17 create a simple static PointLight (no pulsing)
-        const defs = this.pulseLightDefaults || {};
-        const dist = Math.max(size.length() * 1.5, defs.distance || 6);
-        const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
-        const houseLight = new THREE.PointLight(colorNum, defs.baseIntensity || 0.8, dist, defs.decay || 2);
-        houseLight.position.copy(center);
-        houseLight.castShadow = true;
+  const defs = this.pulseLightDefaults || {};
+  // Reduce radius and increase intensity for a brighter, tighter light
+  const dist = Math.max(size.length() * 0.6, (defs.distance || 6) * 0.4);
+  const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
+  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 2.5, dist, defs.decay || 1);
+        houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));        houseLight.castShadow = true;
         model.add(houseLight);
 
         // store as custom house17 light for later control

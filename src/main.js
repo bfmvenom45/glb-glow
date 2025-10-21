@@ -31,12 +31,8 @@ class App {
     
   // Setup UI
     this.setupUI();
-    // Try to load persisted settings (if any)
-    try {
-      this.uiManager.loadSettings();
-    } catch (e) {
-      console.warn('No saved settings or failed to load', e);
-    }
+    // Do NOT auto-load saved settings on startup — settings should reset on reload.
+    // Saved settings are applied only when user clicks Save Settings.
     
     // Запуск анімації
     this.animate();
