@@ -136,8 +136,19 @@ export class SceneManager {
       const t = this.clock.getElapsedTime();
       this.pulseLights.forEach(cfg => {
         const { light, baseIntensity = 0.8, amplitude = 1.0, speed = 1.0, offset = 0 } = cfg;
-        const value = baseIntensity + amplitude * (0.5 + 0.5 * Math.sin((t + offset) * speed * Math.PI * 2));
+        const s = 0.5 + 0.5 * Math.sin((t + offset) * speed * Math.PI * 2);
+        const value = baseIntensity + amplitude * s;
         light.intensity = value;
+        // Animate distance if configured (distanceBase + distanceAmplitude * s -> range min..max)
+        if (cfg.distanceBase !== undefined && cfg.distanceAmplitude !== undefined) {
+          const newDist = cfg.distanceBase + cfg.distanceAmplitude * s;
+          light.distance = newDist;
+          // update shadow camera far to accommodate new distance
+          if (light.shadow && light.shadow.camera) {
+            light.shadow.camera.far = Math.max(10, newDist * 2);
+            if (typeof light.shadow.camera.updateProjectionMatrix === 'function') light.shadow.camera.updateProjectionMatrix();
+          }
+        }
       });
     }
   }
@@ -222,7 +233,7 @@ export class SceneManager {
   const dist = Math.max(size.length() * 0.2, (defs.distance || 6) * 0.8);
   const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
   // Increase default brightness: multiply baseIntensity to make House17 noticeably brighter
-  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1.2) * 4, dist, defs.decay || 1);
+  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 5) * 4, dist, defs.decay || 1);
         houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));
         // Enable shadow casting for the house light and tune shadow params to avoid light leaking
         houseLight.castShadow = true;
@@ -232,7 +243,7 @@ export class SceneManager {
           // Small bias to reduce shadow acne but avoid excessive peter-panning
           houseLight.shadow.bias = 0.0005;
           // A small radius softens the shadow; increase if needed
-          houseLight.shadow.radius = 20;
+          houseLight.shadow.radius = 1;
           // For point lights the shadow camera is a PerspectiveCamera for each cubemap face;
           // ensure near/far are reasonable to cover the model
           if (houseLight.shadow.camera) {
@@ -442,7 +453,7 @@ export class SceneManager {
     return !!(this.house17PulseCfg);
   }
 
-  startHouse17Pulse({ speed = 1.0, amplitude = 1.5, baseIntensity = undefined } = {}) {
+  startHouse17Pulse({ speed = 1.0, amplitude = 1.5, baseIntensity = undefined, distanceMin = 0, distanceMax = 25 } = {}) {
     const light = this.getHouse17Light();
     if (!light) return false;
     if (this.isHouse17Pulsing()) return true; // already pulsing
@@ -456,6 +467,10 @@ export class SceneManager {
     };
     // ensure initial intensity set
     cfg.light.intensity = cfg.baseIntensity;
+    // distance pulsing config: map to [distanceMin..distanceMax]
+    cfg.origDistance = light.distance;
+    cfg.distanceBase = Number(distanceMin);
+    cfg.distanceAmplitude = Number(distanceMax) - Number(distanceMin);
 
     this.pulseLights = this.pulseLights || [];
     this.pulseLights.push(cfg);
@@ -473,8 +488,9 @@ export class SceneManager {
     if (this.pulseLights && this.pulseLights.length) {
       this.pulseLights = this.pulseLights.filter(item => item.light !== cfg.light);
     }
-    // restore base intensity
+    // restore base intensity and original distance
     try { cfg.light.intensity = cfg.baseIntensity; } catch (e) { /* ignore */ }
+    try { if (cfg.origDistance !== undefined) cfg.light.distance = cfg.origDistance; } catch (e) { /* ignore */ }
     delete this.house17PulseCfg;
     return true;
   }
