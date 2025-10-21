@@ -158,7 +158,7 @@ class App {
       this.glowManager.updateParams(params);
     });
     
-  // Setup pulse controls
+    // Setup pulse controls
     this.uiManager.setupPulseControl((enabled) => {
       this.glowManager.setPulseEnabled(enabled);
     });
