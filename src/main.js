@@ -76,6 +76,21 @@ class App {
       const model = await this.modelLoader.load(modelPath);
       this.currentModel = model;
       
+      // Enable shadows on meshes where appropriate to prevent light leaking
+      this.currentModel.traverse((node) => {
+        if (node.isMesh) {
+          try {
+            // Skip enabling cast/receive on transmissive/transparent indoor glass to avoid artifacts
+            const mat = node.material;
+            const isTransmissive = mat && ((mat.transmission && mat.transmission > 0) || mat.transparent);
+            node.castShadow = !isTransmissive;
+            node.receiveShadow = true;
+          } catch (e) {
+            // ignore materials we can't access
+          }
+        }
+      });
+
       // Застосування всіх ефектів
       this.applyAllEffects(model, modelPath);
       // If model is House 17, show house17 UI button

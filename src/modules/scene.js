@@ -54,6 +54,9 @@ export class SceneManager {
     });
     this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Enable shadows globally
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ReinhardToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     
@@ -218,8 +221,24 @@ export class SceneManager {
   // Reduce radius and increase intensity for a brighter, tighter light
   const dist = Math.max(size.length() * 0.6, (defs.distance || 6) * 0.4);
   const colorNum = (typeof this._normalizeColor === 'function') ? (this._normalizeColor(defs.color) || 0xffddaa) : (defs.color || 0xffddaa);
-  const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 2.5, dist, defs.decay || 1);
-        houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));        houseLight.castShadow = true;
+        const houseLight = new THREE.PointLight(colorNum, (defs.baseIntensity || 1) * 2.5, dist, defs.decay || 1);
+        houseLight.position.copy(center).add(new THREE.Vector3(0, 1, 0));
+        // Enable shadow casting for the house light and tune shadow params to avoid light leaking
+        houseLight.castShadow = true;
+        if (houseLight.shadow) {
+          // Increase shadow map resolution for crisper shadows
+          houseLight.shadow.mapSize.set(1024, 1024);
+          // Small bias to reduce shadow acne but avoid excessive peter-panning
+          houseLight.shadow.bias = 0.0005;
+          // A small radius softens the shadow; increase if needed
+          houseLight.shadow.radius = 1;
+          // For point lights the shadow camera is a PerspectiveCamera for each cubemap face;
+          // ensure near/far are reasonable to cover the model
+          if (houseLight.shadow.camera) {
+            houseLight.shadow.camera.near = 0.1;
+            houseLight.shadow.camera.far = Math.max(10, dist * 2);
+          }
+        }
         model.add(houseLight);
 
         // store as custom house17 light for later control
