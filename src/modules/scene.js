@@ -43,6 +43,10 @@ export class SceneManager {
     
     // Освітлення
     this.setupLighting();
+
+  // Clock for animations (pulsing lights)
+  this.clock = new THREE.Clock();
+  this.pulseLights = [];
     
     console.log('SceneManager ініціалізовано');
   }
@@ -75,6 +79,15 @@ export class SceneManager {
     if (this.controls) {
       this.controls.update();
     }
+    // Update pulsing lights
+    if (this.pulseLights && this.pulseLights.length > 0 && this.clock) {
+      const t = this.clock.getElapsedTime();
+      this.pulseLights.forEach(cfg => {
+        const { light, baseIntensity = 0.8, amplitude = 1.0, speed = 1.0, offset = 0 } = cfg;
+        const value = baseIntensity + amplitude * (0.5 + 0.5 * Math.sin((t + offset) * speed * Math.PI * 2));
+        light.intensity = value;
+      });
+    }
   }
   
   onWindowResize() {
@@ -95,7 +108,7 @@ export class SceneManager {
     }
   }
   
-  addCustomLighting(model) {
+  addCustomLighting(model, modelName = '') {
   // Remove previous custom lighting
     // this.removeCustomLighting();
     
@@ -117,9 +130,9 @@ export class SceneManager {
     // this.scene.add(mainLight.target);
     
   // 2. Inner model glow - disabled by default
-    const innerLight = new THREE.PointLight(0xffffaa, 0, size.length());
-    // innerLight.position.copy(center);
-    // this.scene.add(innerLight);
+  const innerLight = new THREE.PointLight(0xffffaa, 0, size.length());
+  // innerLight.position.copy(center);
+  // this.scene.add(innerLight);
     
   // 3. Bottom accent light - disabled by default
     const bottomLight = new THREE.PointLight(0xff8800, 0, size.length() * 0.8);
@@ -146,6 +159,25 @@ export class SceneManager {
       bottom: bottomLight,
       accent: accentLight
     };
+
+    // Special-case: add a pulsing PointLight inside 'house 17' models
+    try {
+      const name = (modelName || model.name || '').toLowerCase();
+      if (name.includes('house 17') || name.includes('house17') || name.includes('house-17')) {
+        const pulseLight = new THREE.PointLight(0xffddaa, 1.2, Math.max(size.length() * 1.5, 6), 2);
+        pulseLight.position.copy(center);
+        pulseLight.castShadow = true;
+        model.add(pulseLight); // attach to model so it moves/scales with it
+
+        // store for update loop
+        this.pulseLights = this.pulseLights || [];
+        this.pulseLights.push({ light: pulseLight, baseIntensity: 0.5, amplitude: 1.2, speed: 1.0, offset: Math.random() * Math.PI * 2 });
+
+        console.log('✨ Added pulsing PointLight inside model:', modelName || model.name);
+      }
+    } catch (e) {
+      console.warn('Failed to add pulsing light for model', modelName, e);
+    }
   }
   
   removeCustomLighting() {

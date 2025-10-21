@@ -120,8 +120,8 @@ class App {
       // Додавання до сцени
       this.sceneManager.scene.add(model);
       
-      // Додавання власного освітлення
-      this.sceneManager.addCustomLighting(model);
+  // Додавання власного освітлення (містить optional modelName)
+  this.sceneManager.addCustomLighting(model, modelPath);
       
   // Add glow effect with default settings
       this.glowManager.addInnerGlow(model);
